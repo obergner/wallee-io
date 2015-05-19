@@ -28,7 +28,7 @@ abstract class MqttPacket {
    * @return Length in bytes on the wire
    */
   def lengthInBytes: Int = {
-    val remainingLengthBytes: Int = (scala.math.log(remainingLength) / scala.math.log(128)).floor.toInt + 1
+    val remainingLengthBytes: Int = (scala.math.log(remainingLength) / scala.math.log(MqttPacket.RemainingLengthBase)).floor.toInt + 1
     1 + remainingLengthBytes + remainingLength
   }
 
@@ -41,6 +41,13 @@ abstract class MqttPacket {
 }
 
 object MqttPacket {
+
+  /**
+   * In MQTT 3.1.1, remaining length is encoded using a base of 128.
+   *
+   * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
+   */
+  val RemainingLengthBase = 128
 
   /**
    * Maximum remaining length allowed by MQTT 3.1.1.
