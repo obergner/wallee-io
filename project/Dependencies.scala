@@ -20,3 +20,13 @@ object Library {
 
   val scalaTest            = "org.scalatest"            %% "scalatest"                            % Version.scalaTest
 }
+
+object Dependencies {
+  val commonDeps = Seq(Library.log4jCore, Library.scalaTest % Test)
+
+  val sharedDeps = commonDeps
+
+  val protocolDeps = commonDeps
+
+  val codecDeps = commonDeps
+}
