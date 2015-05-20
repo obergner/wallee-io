@@ -21,7 +21,112 @@ package io.wallee.protocol
  *
  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
  */
-case class Connect(protocolName: String) extends MqttPacket {
+case class Connect(
+                    protocolName: String,
+                    protocolLevel: ProtocolLevel,
+                    clientId: ClientId,
+                    cleanSession: Boolean,
+                    keepAliveSecs: Int,
+                    username: Option[String],
+                    password: Option[String],
+                    willQoS: QoS,
+                    retainWill: Boolean,
+                    willTopic: Option[Topic],
+                    willMessage: Option[String]
+                    )
+  extends MqttPacket {
+  require(willQoS != Reserved, "QoS 'Reserved' MUST NOT be used")
+  require(keepAliveSecs <= Connect.MaxKeepAliveSecs, "Keep alive must not exceed 2^16 seconds")
+  require(
+    (willTopic.isDefined && willMessage.isDefined) || (willTopic.isEmpty && willMessage.isEmpty),
+    "Either will topic and will message need to be given, or neither"
+  )
 
-  override protected def remainingLength: Int = 0
+  override protected def remainingLength: Int = {
+    Connect.VariableHeaderBaseLengthInBytes +
+      encodedLengthInBytesOf(protocolName) +
+      encodedLengthInBytesOf(clientId) +
+      username.map(encodedLengthInBytesOf).getOrElse(0) +
+      password.map(encodedLengthInBytesOf).getOrElse(0) +
+      willTopic.map(_.value).map(encodedLengthInBytesOf).getOrElse(0) +
+      willMessage.map(encodedLengthInBytesOf).getOrElse(0)
+  }
 }
+
+object Connect {
+
+  val VariableHeaderBaseLengthInBytes: Int = 4
+
+  private val MaxKeepAliveWidth = 16
+
+  val MaxKeepAliveSecs: Int = scala.math.pow(2, MaxKeepAliveWidth).toInt
+
+  def apply(
+             protocolName: String,
+             protocolLevel: ProtocolLevel,
+             clientId: ClientId,
+             cleanSession: Boolean,
+             keepAliveSecs: Int,
+             username: String,
+             password: String,
+             willQoS: QoS,
+             retainWill: Boolean,
+             willTopic: Topic,
+             willMessage: String
+             ): Connect = apply(
+    protocolName,
+    protocolLevel,
+    clientId,
+    cleanSession,
+    keepAliveSecs,
+    Some(username),
+    Some(password),
+    willQoS,
+    retainWill,
+    Some(willTopic),
+    Some(willMessage)
+  )
+
+  def apply(
+             protocolName: String,
+             protocolLevel: ProtocolLevel,
+             clientId: ClientId,
+             cleanSession: Boolean,
+             keepAliveSecs: Int,
+             username: String,
+             password: String
+             ): Connect = apply(
+    protocolName,
+    protocolLevel,
+    clientId,
+    cleanSession,
+    keepAliveSecs,
+    Some(username),
+    Some(password),
+    AtMostOnce,
+    retainWill = false,
+    None,
+    None
+  )
+
+  def apply(
+             protocolName: String,
+             protocolLevel: ProtocolLevel,
+             clientId: ClientId,
+             cleanSession: Boolean,
+             keepAliveSecs: Int
+             ): Connect = apply(
+    protocolName,
+    protocolLevel,
+    clientId,
+    cleanSession,
+    keepAliveSecs,
+    None,
+    None,
+    AtMostOnce,
+    retainWill = false,
+    None,
+    None
+  )
+}
+

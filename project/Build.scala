@@ -1,12 +1,12 @@
-import com.typesafe.sbt.{GitPlugin, SbtScalariform}
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
+import com.typesafe.sbt.{GitPlugin, SbtScalariform}
 import de.heikoseeberger.sbtheader.license.Apache2_0
 import de.heikoseeberger.sbtheader.{AutomateHeaderPlugin, HeaderPlugin}
 import sbt.Keys._
 import sbt._
 import spray.revolver.RevolverPlugin.Revolver
 
-import scalariform.formatter.preferences.{AlignSingleLineCaseStatements, DoubleIndentClassDeclaration}
+import scalariform.formatter.preferences.{AlignParameters, AlignSingleLineCaseStatements, DoubleIndentClassDeclaration}
 
 object Build extends AutoPlugin {
 
@@ -53,10 +53,11 @@ object Build extends AutoPlugin {
           .setPreference(AlignSingleLineCaseStatements, true)
           .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
           .setPreference(DoubleIndentClassDeclaration, true)
+          .setPreference(AlignParameters, true)
       ) ++
       // Git settings
       List(
-        GitPlugin.autoImport.git.baseVersion := "1.0.0"
+        GitPlugin.autoImport.git.baseVersion := "0.1.0"
       ) ++
       // Header settings
       AutomateHeaderPlugin.automateFor(Compile, Test) ++
