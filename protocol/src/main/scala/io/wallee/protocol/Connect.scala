@@ -57,9 +57,7 @@ object Connect {
 
   val VariableHeaderBaseLengthInBytes: Int = 4
 
-  private val MaxKeepAliveWidth = 16
-
-  val MaxKeepAliveSecs: Int = scala.math.pow(2, MaxKeepAliveWidth).toInt
+  val MaxKeepAliveSecs: Int = scala.math.pow(2, 16).toInt
 
   def apply(
              protocolName: String,
