@@ -21,19 +21,19 @@ package io.wallee.protocol
  *
  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
  */
-case class Connect(
-                    protocolName: String,
-                    protocolLevel: ProtocolLevel,
-                    clientId: ClientId,
-                    cleanSession: Boolean,
-                    keepAliveSecs: Int,
-                    username: Option[String],
-                    password: Option[String],
-                    willQoS: QoS,
-                    retainWill: Boolean,
-                    willTopic: Option[Topic],
-                    willMessage: Option[String]
-                    )
+final case class Connect(
+                          protocolName: String,
+                          protocolLevel: ProtocolLevel,
+                          clientId: ClientId,
+                          cleanSession: Boolean,
+                          keepAliveSecs: Int,
+                          username: Option[String],
+                          password: Option[String],
+                          willQoS: QoS,
+                          retainWill: Boolean,
+                          willTopic: Option[Topic],
+                          willMessage: Option[String]
+                          )
   extends MqttPacket {
   require(willQoS != Reserved, "QoS 'Reserved' MUST NOT be used")
   require(keepAliveSecs <= Connect.MaxKeepAliveSecs, "Keep alive must not exceed 2^16 seconds")

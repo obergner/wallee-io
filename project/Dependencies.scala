@@ -28,5 +28,5 @@ object Dependencies {
 
   val protocolDeps = commonDeps
 
-  val codecDeps = commonDeps
+  val codecDeps = commonDeps ++ Seq(Library.akkaActor, Library.akkaTestkit % Test)
 }
