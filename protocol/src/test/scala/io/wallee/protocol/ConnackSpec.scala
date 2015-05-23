@@ -16,7 +16,7 @@
 
 package io.wallee.protocol
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class ConnackSpec extends FlatSpec with Matchers {
 

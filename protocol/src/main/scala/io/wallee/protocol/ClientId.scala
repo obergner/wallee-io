@@ -18,8 +18,8 @@ package io.wallee.protocol
 
 /** Uniquely identifies an MQTT client, using a UTF-8 string.
  *
-  * @param value This ClientId's value
+ *  @param value This ClientId's value
  *
-  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718031
+ *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718031
  */
 case class ClientId(value: String)

@@ -20,9 +20,9 @@ import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
-import akka.util.{ByteStringBuilder, CompactByteString}
+import akka.util.{ ByteStringBuilder, CompactByteString }
 import io.wallee.protocol.MalformedMqttPacketException
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class MqttFrameDecoderSpec extends FlatSpec with Matchers {
 
@@ -116,16 +116,16 @@ class MqttFrameDecoderSpec extends FlatSpec with Matchers {
 
   "A new MqttFrameDecoder when given a single serialized packet with illegal remaining length in three chunks as input" should
     "propagate a MalformedMqttPacketException downstream" in {
-    val firstChunk = CompactByteString(0x31, 0x81, 0xA0)
-    val secondChunk = CompactByteString(0x80, 0x91)
-    val thirdChunk = CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05)
+      val firstChunk = CompactByteString(0x31, 0x81, 0xA0)
+      val secondChunk = CompactByteString(0x80, 0x91)
+      val thirdChunk = CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05)
 
-    val error = Source(List(firstChunk, secondChunk, thirdChunk))
-      .transform(() => new MqttFrameDecoder)
-      .runWith(TestSink.probe[MqttFrame])
-      .request(1)
-      .expectError()
+      val error = Source(List(firstChunk, secondChunk, thirdChunk))
+        .transform(() => new MqttFrameDecoder)
+        .runWith(TestSink.probe[MqttFrame])
+        .request(1)
+        .expectError()
 
-    assert(error.isInstanceOf[MalformedMqttPacketException])
-  }
+      assert(error.isInstanceOf[MalformedMqttPacketException])
+    }
 }

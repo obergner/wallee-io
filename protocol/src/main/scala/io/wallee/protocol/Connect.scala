@@ -18,22 +18,22 @@ package io.wallee.protocol
 
 /** MQTT CONNECT packet.
  *
-  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
+ *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
  */
 final case class Connect(
-                          protocolName: String,
-                          protocolLevel: ProtocolLevel,
-                          clientId: ClientId,
-                          cleanSession: Boolean,
-                          keepAliveSecs: Int,
-                          username: Option[String],
-                          password: Option[String],
-                          willQoS: QoS,
-                          retainWill: Boolean,
-                          willTopic: Option[Topic],
-                          willMessage: Option[String]
-                          )
-  extends MqttPacket {
+  protocolName:  String,
+  protocolLevel: ProtocolLevel,
+  clientId:      ClientId,
+  cleanSession:  Boolean,
+  keepAliveSecs: Int,
+  username:      Option[String],
+  password:      Option[String],
+  willQoS:       QoS,
+  retainWill:    Boolean,
+  willTopic:     Option[Topic],
+  willMessage:   Option[String]
+)
+    extends MqttPacket {
   requireWellformed(willQoS != Reserved, "QoS 'Reserved' MUST NOT be used")
   requireWellformed(keepAliveSecs <= Connect.MaxKeepAliveSecs, "Keep alive must not exceed 2^16 seconds")
   requireWellformed(
@@ -59,18 +59,18 @@ object Connect {
   val MaxKeepAliveSecs: Int = scala.math.pow(2, 16).toInt
 
   def apply(
-             protocolName: String,
-             protocolLevel: ProtocolLevel,
-             clientId: ClientId,
-             cleanSession: Boolean,
-             keepAliveSecs: Int,
-             username: String,
-             password: String,
-             willQoS: QoS,
-             retainWill: Boolean,
-             willTopic: Topic,
-             willMessage: String
-             ): Connect = apply(
+    protocolName:  String,
+    protocolLevel: ProtocolLevel,
+    clientId:      ClientId,
+    cleanSession:  Boolean,
+    keepAliveSecs: Int,
+    username:      String,
+    password:      String,
+    willQoS:       QoS,
+    retainWill:    Boolean,
+    willTopic:     Topic,
+    willMessage:   String
+  ): Connect = apply(
     protocolName,
     protocolLevel,
     clientId,
@@ -85,14 +85,14 @@ object Connect {
   )
 
   def apply(
-             protocolName: String,
-             protocolLevel: ProtocolLevel,
-             clientId: ClientId,
-             cleanSession: Boolean,
-             keepAliveSecs: Int,
-             username: String,
-             password: String
-             ): Connect = apply(
+    protocolName:  String,
+    protocolLevel: ProtocolLevel,
+    clientId:      ClientId,
+    cleanSession:  Boolean,
+    keepAliveSecs: Int,
+    username:      String,
+    password:      String
+  ): Connect = apply(
     protocolName,
     protocolLevel,
     clientId,
@@ -107,12 +107,12 @@ object Connect {
   )
 
   def apply(
-             protocolName: String,
-             protocolLevel: ProtocolLevel,
-             clientId: ClientId,
-             cleanSession: Boolean,
-             keepAliveSecs: Int
-             ): Connect = apply(
+    protocolName:  String,
+    protocolLevel: ProtocolLevel,
+    clientId:      ClientId,
+    cleanSession:  Boolean,
+    keepAliveSecs: Int
+  ): Connect = apply(
     protocolName,
     protocolLevel,
     clientId,

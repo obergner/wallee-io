@@ -18,7 +18,7 @@ package io.wallee.protocol
 
 import java.nio.charset.Charset
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class ConnectSpec extends FlatSpec with Matchers {
 

@@ -16,7 +16,7 @@
 
 package io.wallee.codec
 
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class PacketTypeSpec extends FlatSpec with Matchers {
 

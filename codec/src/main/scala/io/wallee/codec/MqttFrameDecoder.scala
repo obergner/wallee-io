@@ -16,7 +16,7 @@
 
 package io.wallee.codec
 
-import akka.stream.stage.{Context, PushPullStage, SyncDirective}
+import akka.stream.stage.{ Context, PushPullStage, SyncDirective }
 import akka.util.ByteString
 import io.wallee.protocol.MalformedMqttPacketException
 
@@ -24,7 +24,7 @@ import scala.util.control.Breaks._
 
 /** Partition incoming byte stream into [[MqttFrame]]s.
  *
-  * ATTENTION: This class is stateful and NOT thread safe.
+ *  ATTENTION: This class is stateful and NOT thread safe.
  */
 class MqttFrameDecoder extends PushPullStage[ByteString, MqttFrame] {
 
@@ -55,7 +55,7 @@ class MqttFrameDecoder extends PushPullStage[ByteString, MqttFrame] {
           currentState = currentState.onNewInput()
           currentState match {
             case MqttFrameDecoded(_, _) | IllegalRemainingLength(_) => break()
-            case _ =>
+            case _                                                  =>
           }
         }
       }
@@ -66,8 +66,7 @@ class MqttFrameDecoder extends PushPullStage[ByteString, MqttFrame] {
           ctx.push(frame)
         case IllegalRemainingLength(_) =>
           currentState = NoDataConsumed(bufferAccess)
-          ctx.fail(new
-              MalformedMqttPacketException("Illegal remaining length field in MQTT packet")) // FIXME: We should rather close this connection
+          ctx.fail(new MalformedMqttPacketException("Illegal remaining length field in MQTT packet")) // FIXME: We should rather close this connection
         case _ => ctx.pull()
       }
     }
@@ -128,12 +127,11 @@ object MqttFrameDecoder {
 
   final case class IllegalRemainingLength(buffer: Buffer) extends DecodingState(buffer) {
 
-    override def onNewInput(): DecodingState = throw new
-        UnsupportedOperationException("IllegalRemainingLength is a terminal state")
+    override def onNewInput(): DecodingState = throw new UnsupportedOperationException("IllegalRemainingLength is a terminal state")
   }
 
   final case class ConsumingVariableHeaderAndPayload(buffer: Buffer, firstHeaderByte: Byte, remainingLength: Int)
-    extends DecodingState(buffer) {
+      extends DecodingState(buffer) {
 
     private[this] var variableHeaderAndPayload = ByteString.empty
 
@@ -153,8 +151,7 @@ object MqttFrameDecoder {
   }
 
   final case class MqttFrameDecoded(buffer: Buffer, frame: MqttFrame) extends DecodingState(buffer) {
-    override def onNewInput(): DecodingState = throw new
-        UnsupportedOperationException("MqttFrameDecoded is a terminal state")
+    override def onNewInput(): DecodingState = throw new UnsupportedOperationException("MqttFrameDecoded is a terminal state")
   }
 
 }

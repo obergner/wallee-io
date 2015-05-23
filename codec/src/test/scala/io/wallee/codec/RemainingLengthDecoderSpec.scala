@@ -16,9 +16,9 @@
 
 package io.wallee.codec
 
-import akka.util.{ByteString, CompactByteString}
-import io.wallee.codec.RemainingLengthDecoder.{MaxRemainingLengthExceeded, MoreInputNeeded}
-import org.scalatest.{FlatSpec, Matchers}
+import akka.util.{ ByteString, CompactByteString }
+import io.wallee.codec.RemainingLengthDecoder.{ MaxRemainingLengthExceeded, MoreInputNeeded }
+import org.scalatest.{ FlatSpec, Matchers }
 
 class RemainingLengthDecoderSpec extends FlatSpec with Matchers {
 
@@ -27,7 +27,7 @@ class RemainingLengthDecoderSpec extends FlatSpec with Matchers {
 
     val underTest = new RemainingLengthDecoder
     underTest(inputChunk) match {
-      case Left(state) => assert(state == MoreInputNeeded)
+      case Left(state)   => assert(state == MoreInputNeeded)
       case Right(result) => fail("RemainingLengthDecoder incorrectly returned Right(result)")
     }
   }
@@ -89,7 +89,7 @@ class RemainingLengthDecoderSpec extends FlatSpec with Matchers {
 
     val underTest = new RemainingLengthDecoder
     underTest(inputChunk) match {
-      case Left(state) => assert(state == MaxRemainingLengthExceeded)
+      case Left(state)   => assert(state == MaxRemainingLengthExceeded)
       case Right(result) => fail("RemainingLengthDecoder incorrectly returned Right(result)")
     }
   }
@@ -101,7 +101,7 @@ class RemainingLengthDecoderSpec extends FlatSpec with Matchers {
 
     val underTest = new RemainingLengthDecoder
     underTest(firstInputChunk) match {
-      case Left(state) => assert(state == MoreInputNeeded)
+      case Left(state)   => assert(state == MoreInputNeeded)
       case Right(result) => fail("RemainingLengthDecoder incorrectly returned Right(result)")
     }
 
@@ -119,12 +119,12 @@ class RemainingLengthDecoderSpec extends FlatSpec with Matchers {
 
     val underTest = new RemainingLengthDecoder
     underTest(firstInputChunk) match {
-      case Left(state) => assert(state == MoreInputNeeded)
+      case Left(state)   => assert(state == MoreInputNeeded)
       case Right(result) => fail("RemainingLengthDecoder incorrectly returned Right(result)")
     }
 
     underTest(secondInputChunk) match {
-      case Left(state) => assert(state == MaxRemainingLengthExceeded)
+      case Left(state)   => assert(state == MaxRemainingLengthExceeded)
       case Right(result) => fail("RemainingLengthDecoder incorrectly returned Right(result)")
     }
   }

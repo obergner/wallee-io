@@ -18,7 +18,7 @@ package io.wallee.codec
 
 /** List all MQTT 3.1.1 packet types.
  *
-  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718021
+ *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718021
  */
 object PacketType {
 

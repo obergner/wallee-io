@@ -17,23 +17,23 @@
 package io.wallee.codec
 
 import akka.util.ByteString
-import io.wallee.protocol.{MalformedMqttPacketException, MqttPacket}
+import io.wallee.protocol.{ MalformedMqttPacketException, MqttPacket }
 
-import scala.util.{Failure, Success, Try}
+import scala.util.{ Failure, Success, Try }
 
 /** Decode an [[MqttFrame]] into an [[MqttPacket]].
-  *
-  * @tparam P Concrete [[MqttPacket]] type
-  */
+ *
+ *  @tparam P Concrete [[MqttPacket]] type
+ */
 trait MqttPacketDecoder[P <: MqttPacket] {
 
   /** Decode `frame`, returning the decoded [[MqttPacket]].
-    *
-    * @param frame [[MqttFrame]] to decode
-    * @return Decoded [[MqttPacket]]
-    * @throws IllegalArgumentException If this [[MqttPacketDecoder]] is not capable of handling `frame`, i.e. `frame`
-    *                                  contains a serialized packet of incompatible type
-    */
+   *
+   *  @param frame [[MqttFrame]] to decode
+   *  @return Decoded [[MqttPacket]]
+   *  @throws IllegalArgumentException If this [[MqttPacketDecoder]] is not capable of handling `frame`, i.e. `frame`
+   *                                  contains a serialized packet of incompatible type
+   */
   @throws[IllegalArgumentException]
   def decode(frame: MqttFrame): P
 

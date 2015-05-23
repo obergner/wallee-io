@@ -18,7 +18,7 @@ package io.wallee.protocol
 
 /** MQTT protocol version. Only Level4 is supported, i.e. MQTT 3.1.1.
  *
-  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030
+ *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030
  */
 sealed trait ProtocolLevel
 

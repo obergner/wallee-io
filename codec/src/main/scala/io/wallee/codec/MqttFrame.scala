@@ -20,13 +20,13 @@ import akka.util.ByteString
 
 /** A chunk of bytes that contains exactly one serialized MQTT packet.
  *
-  * An `MqttFrame` knows via its `packetType` property about the type of MQTT packet it contains. Likewise, its
-  * `fixedHeaderFlags` property offers access to bits 0-3 in the first fixed header byte.
+ *  An `MqttFrame` knows via its `packetType` property about the type of MQTT packet it contains. Likewise, its
+ *  `fixedHeaderFlags` property offers access to bits 0-3 in the first fixed header byte.
  *
-  * Finally, an `MqttFrame`'s `variableHeaderPlusPayload` property returns a `ByteString` containing variable header (if
-  * present) and payload in serialized form.
+ *  Finally, an `MqttFrame`'s `variableHeaderPlusPayload` property returns a `ByteString` containing variable header (if
+ *  present) and payload in serialized form.
  *
-  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718020
+ *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718020
  */
 final class MqttFrame(private val typeAndFlags: Byte, val variableHeaderPlusPayload: ByteString) {
   require(
@@ -37,13 +37,13 @@ final class MqttFrame(private val typeAndFlags: Byte, val variableHeaderPlusPayl
 
   /** Return a byte representation of this MQTT packet's type.
    *
-    * @return A byte representation of this MQTT packet's type
+   *  @return A byte representation of this MQTT packet's type
    */
   def packetType: Byte = PacketType.parse(typeAndFlags)
 
   /** Return this MQTT packet's header flags. Relevant only for PUBLISH packets.
    *
-    * @return This MQTT packet's header flags
+   *  @return This MQTT packet's header flags
    */
   def fixedHeaderFlags: Byte = (typeAndFlags & 0x0F).toByte
 

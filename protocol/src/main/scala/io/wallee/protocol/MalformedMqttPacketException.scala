@@ -17,8 +17,8 @@
 package io.wallee.protocol
 
 /** Signals an [[MqttPacket]] - either in serialized or deserialized form - that does not conform to the rules laid out
-  * by MQTT 3.1.1.
-  *
-  * @param msg Explanatory message
-  */
+ *  by MQTT 3.1.1.
+ *
+ *  @param msg Explanatory message
+ */
 case class MalformedMqttPacketException(msg: String) extends Exception(msg)
