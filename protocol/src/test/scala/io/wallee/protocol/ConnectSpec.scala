@@ -75,7 +75,7 @@ class ConnectSpec extends FlatSpec with Matchers {
     val password = "password"
     val willTopic: Topic = "this/is/a/test/topic"
 
-    intercept[IllegalArgumentException] {
+    intercept[MalformedMqttPacketException] {
       Connect(
         protocolName,
         Level4,
@@ -101,7 +101,7 @@ class ConnectSpec extends FlatSpec with Matchers {
     val willMessage = "This is a will message"
     val keepAliveSecs = (scala.math.pow(2, 16) + 1).toInt
 
-    intercept[IllegalArgumentException] {
+    intercept[MalformedMqttPacketException] {
       Connect(
         protocolName,
         Level4,

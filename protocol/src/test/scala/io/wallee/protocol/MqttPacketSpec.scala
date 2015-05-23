@@ -86,7 +86,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with remainingLength >= 268435456" should "throw IllegalArgumentException upon creation" in {
     val remLength = 268435456
 
-    intercept[IllegalArgumentException] {
+    intercept[MalformedMqttPacketException] {
       new MqttPacket {
         override protected def remainingLength: Int = remLength
       }

@@ -6,7 +6,7 @@ import sbt.Keys._
 import sbt._
 import spray.revolver.RevolverPlugin.Revolver
 
-import scalariform.formatter.preferences.{AlignParameters, AlignSingleLineCaseStatements, DoubleIndentClassDeclaration}
+import scalariform.formatter.preferences._
 
 object Build extends AutoPlugin {
 
@@ -54,6 +54,8 @@ object Build extends AutoPlugin {
           .setPreference(AlignSingleLineCaseStatements.MaxArrowIndent, 100)
           .setPreference(DoubleIndentClassDeclaration, true)
           .setPreference(AlignParameters, true)
+          .setPreference(AlignArguments, true)
+          .setPreference(MultilineScaladocCommentsStartOnFirstLine, true)
       ) ++
       // Git settings
       List(

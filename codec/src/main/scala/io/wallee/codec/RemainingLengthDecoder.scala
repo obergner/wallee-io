@@ -18,12 +18,11 @@ package io.wallee.codec
 
 import akka.util.ByteString
 
-/**
- * Decodes an MQTT packet's `remaining length`.
+/** Decodes an MQTT packet's `remaining length`.
  *
- * ATTENTION: This class is stateful and NOT thread safe.
+  * ATTENTION: This class is stateful and NOT thread safe.
  *
- * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
+  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
  */
 class RemainingLengthDecoder
   extends (ByteString => Either[RemainingLengthDecoder.State, RemainingLengthDecoder.Result]) {

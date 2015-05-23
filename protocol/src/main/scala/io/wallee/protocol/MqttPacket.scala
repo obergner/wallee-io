@@ -16,43 +16,41 @@
 
 package io.wallee.protocol
 
-/**
- * Abstract base class for MQTT packets.
+/** Abstract base class for MQTT packets.
  */
 abstract class MqttPacket {
-  require(remainingLength <= MqttPacket.MaxRemainingLength, s"MQTT 3.1.1: an MQTT packet's remaining length MUST NOT exceed ${MqttPacket.MaxRemainingLength}")
+  requireWellformed(
+    remainingLength <= MqttPacket.MaxRemainingLength,
+    s"MQTT 3.1.1: an MQTT packet's remaining length MUST NOT exceed ${MqttPacket.MaxRemainingLength}"
+  )
 
-  /**
-   * This MQTT packet's length in bytes on the wire.
+  /** This MQTT packet's length in bytes on the wire.
    *
-   * @return Length in bytes on the wire
+    * @return Length in bytes on the wire
    */
   def lengthInBytes: Int = {
     val remainingLengthBytes: Int = (scala.math.log(remainingLength) / scala.math.log(MqttPacket.RemainingLengthBase)).floor.toInt + 1
     1 + remainingLengthBytes + remainingLength
   }
 
-  /**
-   * This MQTT packet's remaining length, i.e. its length on the wire sans its fixed header.
+  /** This MQTT packet's remaining length, i.e. its length on the wire sans its fixed header.
    *
-   * @return Length on the wire sans fixed header
+    * @return Length on the wire sans fixed header
    */
   protected def remainingLength: Int
 }
 
 object MqttPacket {
 
-  /**
-   * In MQTT 3.1.1, remaining length is encoded using a base of 128.
+  /** In MQTT 3.1.1, remaining length is encoded using a base of 128.
    *
-   * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
+    * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
    */
   val RemainingLengthBase = 128
 
-  /**
-   * Maximum remaining length allowed by MQTT 3.1.1.
+  /** Maximum remaining length allowed by MQTT 3.1.1.
    *
-   * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
+    * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
    */
   val MaxRemainingLength: Int = 127 * 128 * 128 * 128 + 127 * 128 * 128 + 127 * 128 + 127
 }

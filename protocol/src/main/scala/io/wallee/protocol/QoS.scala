@@ -16,30 +16,25 @@
 
 package io.wallee.protocol
 
-/**
- * Delivery guarantees defined by MQTT 3.1.1.
+/** Delivery guarantees defined by MQTT 3.1.1.
  *
- * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718099
+  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718099
  */
 sealed trait QoS
 
-/**
- * A message will be delivered at most once. It may be delivered not at all.
+/** A message will be delivered at most once. It may be delivered not at all.
  */
 object AtMostOnce extends QoS
 
-/**
- * A message will be delivered at least once. It may be delivered more than once.
+/** A message will be delivered at least once. It may be delivered more than once.
  */
 object AtLeastOnce extends QoS
 
-/**
- * A message will be delivered exactly once. This is obviously in many situations the most desirable but always the
- * most expensive option.
+/** A message will be delivered exactly once. This is obviously in many situations the most desirable but always the
+  * most expensive option.
  */
 object ExactlyOnce extends QoS
 
-/**
- * Reserved for future use. MUST NOT be used.
+/** Reserved for future use. MUST NOT be used.
  */
 object Reserved extends QoS

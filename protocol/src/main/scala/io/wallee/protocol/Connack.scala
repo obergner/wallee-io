@@ -16,23 +16,20 @@
 
 package io.wallee.protocol
 
-/**
- * CONNACK packet.
+/** CONNACK packet.
  *
- * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718033
+  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718033
  */
 final case class Connack(sessionPresent: Boolean, returnCode: ConnectReturnCode) extends MqttPacket {
 
-  /**
-   * This MQTT packet's remaining length, i.e. its length on the wire sans its fixed header.
+  /** This MQTT packet's remaining length, i.e. its length on the wire sans its fixed header.
    *
-   * @return Length on the wire sans fixed header
+    * @return Length on the wire sans fixed header
    */
   override protected def remainingLength: Int = 2
 }
 
-/**
- * Trait defining possible return codes in response to a Connect packet.
+/** Trait defining possible return codes in response to a Connect packet.
  */
 sealed trait ConnectReturnCode
 

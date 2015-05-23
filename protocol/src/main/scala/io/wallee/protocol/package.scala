@@ -18,45 +18,55 @@ package io.wallee
 
 import java.nio.charset.Charset
 
+import scala.language.implicitConversions
+
 package object protocol {
 
-  /**
-   * Implicit conversion from String to ClientId.
+  /** Require that an [[MqttPacket]] be well-formed, i.e. that it conforms to the rules laid out in MQTT 3.1.1. Throw
+    * a [[MalformedMqttPacketException]] otherwise.
    *
-   * @param clientId String value to convert
-   * @return Conversion result
+    * @param requirement The requirement to fulfill
+    * @param message Explanatory message in case `requirement` fails
    */
+  @throws[MalformedMqttPacketException]
+  @inline final def requireWellformed(requirement: Boolean, message: => Any) {
+    if (!requirement) {
+      throw new MalformedMqttPacketException("Malformed MQTT packet: " + message)
+    }
+  }
+
+  /** Implicit conversion from String to ClientId.
+    *
+    * @param clientId String value to convert
+    * @return Conversion result
+    */
   implicit def string2ClientId(clientId: String): ClientId = ClientId(clientId)
 
-  /**
-   * Implicit conversion from ClientId to String.
+  /** Implicit conversion from ClientId to String.
    *
-   * @param clientId ClientId to convert
-   * @return Conversion result
+    * @param clientId ClientId to convert
+    * @return Conversion result
    */
   implicit def clientId2String(clientId: ClientId): String = clientId.value
 
-  /**
-   * Implicit conversion from String to Topic.
+  /** Implicit conversion from String to Topic.
    *
-   * @param topic String value to convert
-   * @return Conversion result
+    * @param topic String value to convert
+    * @return Conversion result
    */
   implicit def string2Topic(topic: String): Topic = Topic(topic)
 
-  /**
-   * Implicit conversion from Topic to String.
+  /** Implicit conversion from Topic to String.
    *
-   * @param topic Topic to convert
-   * @return Conversion result
+    * @param topic Topic to convert
+    * @return Conversion result
    */
   implicit def topic2String(topic: Topic): String = topic.value
 
-  /**
-   * How many bytes on the wire it will take to encode string.
+  /** How many bytes on the wire it will take to encode string.
    *
-   * @param string String to encode
-   * @return Length in bytes on the wire
+    * @param string String to encode
+    * @return Length in bytes on the wire
    */
   def encodedLengthInBytesOf(string: String): Int = 2 + string.getBytes(Charset.forName("UTF-8")).length
 }

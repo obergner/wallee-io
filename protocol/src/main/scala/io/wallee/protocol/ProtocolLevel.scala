@@ -16,14 +16,12 @@
 
 package io.wallee.protocol
 
-/**
- * MQTT protocol version. Only Level4 is supported, i.e. MQTT 3.1.1.
+/** MQTT protocol version. Only Level4 is supported, i.e. MQTT 3.1.1.
  *
- * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030
+  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718030
  */
 sealed trait ProtocolLevel
 
-/**
- * Protocol level 4, i.e. MQTT 3.1.1.
+/** Protocol level 4, i.e. MQTT 3.1.1.
  */
 object Level4 extends ProtocolLevel

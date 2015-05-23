@@ -16,10 +16,9 @@
 
 package io.wallee.protocol
 
-/**
- * MQTT CONNECT packet.
+/** MQTT CONNECT packet.
  *
- * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
+  * @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
  */
 final case class Connect(
                           protocolName: String,
@@ -35,9 +34,9 @@ final case class Connect(
                           willMessage: Option[String]
                           )
   extends MqttPacket {
-  require(willQoS != Reserved, "QoS 'Reserved' MUST NOT be used")
-  require(keepAliveSecs <= Connect.MaxKeepAliveSecs, "Keep alive must not exceed 2^16 seconds")
-  require(
+  requireWellformed(willQoS != Reserved, "QoS 'Reserved' MUST NOT be used")
+  requireWellformed(keepAliveSecs <= Connect.MaxKeepAliveSecs, "Keep alive must not exceed 2^16 seconds")
+  requireWellformed(
     (willTopic.isDefined && willMessage.isDefined) || (willTopic.isEmpty && willMessage.isEmpty),
     "Either will topic and will message need to be given, or neither"
   )

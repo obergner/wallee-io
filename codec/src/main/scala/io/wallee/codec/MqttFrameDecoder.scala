@@ -18,13 +18,13 @@ package io.wallee.codec
 
 import akka.stream.stage.{Context, PushPullStage, SyncDirective}
 import akka.util.ByteString
+import io.wallee.protocol.MalformedMqttPacketException
 
 import scala.util.control.Breaks._
 
-/**
- * Partition incoming byte stream into `MqttFrame`s.
+/** Partition incoming byte stream into [[MqttFrame]]s.
  *
- * ATTENTION: This class is stateful and NOT thread safe.
+  * ATTENTION: This class is stateful and NOT thread safe.
  */
 class MqttFrameDecoder extends PushPullStage[ByteString, MqttFrame] {
 
@@ -67,7 +67,7 @@ class MqttFrameDecoder extends PushPullStage[ByteString, MqttFrame] {
         case IllegalRemainingLength(_) =>
           currentState = NoDataConsumed(bufferAccess)
           ctx.fail(new
-              IllegalArgumentException("Illegal remaining length field in MQTT packet")) // FIXME: We should rather close this connection
+              MalformedMqttPacketException("Illegal remaining length field in MQTT packet")) // FIXME: We should rather close this connection
         case _ => ctx.pull()
       }
     }
