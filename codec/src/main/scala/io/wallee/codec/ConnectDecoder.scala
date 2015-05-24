@@ -26,7 +26,96 @@ import scala.util.{ Failure, Success, Try }
 object ConnectDecoder extends MqttPacketDecoder[Connect](PacketType.Connect) {
 
   override protected[this] def doDecode(frame: MqttFrame): Try[Connect] = {
-    Failure(new NotImplementedError())
+    if (frame.fixedHeaderFlags != 0x00) {
+      Failure(MalformedMqttPacketException("[MQTT-2.2.2-2]: Invalid CONNECT header flags"))
+    } else {
+      VariableConnectHeader.decode(frame.variableHeaderPlusPayload).flatMap[Connect] {
+        case (variableHeader, remainder) =>
+          new StatefulConnectPacketDecoder(variableHeader).decode(remainder)
+      }
+    }
+  }
+}
+
+protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: VariableConnectHeader) {
+
+  import MqttPacketDecoder._
+
+  private[this] var clientId: String = ""
+
+  private[this] var willTopic: Option[Topic] = None
+
+  private[this] var willMessage: Option[String] = None
+
+  private[this] var username: Option[String] = None
+
+  private[this] var password: Option[String] = None
+
+  def decode(payload: ByteString): Try[Connect] = {
+    decodeUtf8String(payload)
+      .flatMap[(Option[Topic], ByteString)](decodeWillTopic)
+      .flatMap[(Option[String], ByteString)](decodeWillMessage)
+      .flatMap[(Option[String], ByteString)](decodeUsername)
+      .flatMap[(Option[String], ByteString)](decodePassword)
+      .flatMap[Connect]({
+        case (passwd, remainder) =>
+          this.password = passwd
+          Success(
+            Connect(
+              variableHeader.protocolName,
+              variableHeader.protocolLevel,
+              clientId,
+              variableHeader.cleanSession,
+              variableHeader.keepAliveSecs,
+              username,
+              password,
+              variableHeader.willQoS,
+              variableHeader.willRetain,
+              willTopic,
+              willMessage
+            )
+          )
+      })
+  }
+
+  private[this] def decodeWillTopic: ((String, ByteString)) => Try[(Option[Topic], ByteString)] = {
+    case (cltId, remainder) =>
+      this.clientId = cltId
+      if (variableHeader.willFlag) {
+        decodeUtf8String(remainder).flatMap[(Option[Topic], ByteString)] { case (topicString, rem) => Success((Some(Topic(topicString)), rem)) }
+      } else {
+        Success((None, remainder))
+      }
+  }
+
+  private[this] def decodeWillMessage: ((Option[Topic], ByteString)) => Try[(Option[String], ByteString)] = {
+    case (willTpc, remainder) =>
+      this.willTopic = willTpc
+      if (variableHeader.willFlag) {
+        decodeUtf8String(remainder).flatMap[(Option[String], ByteString)] { case (messageString, rem) => Success((Some(messageString), rem)) }
+      } else {
+        Success((None, remainder))
+      }
+  }
+
+  private[this] def decodeUsername: ((Option[String], ByteString)) => Try[(Option[String], ByteString)] = {
+    case (willMsg, remainder) =>
+      this.willMessage = willMsg
+      if (variableHeader.username) {
+        decodeUtf8String(remainder).flatMap[(Option[String], ByteString)] { case (usernameString, rem) => Success((Some(usernameString), rem)) }
+      } else {
+        Success((None, remainder))
+      }
+  }
+
+  private[this] def decodePassword: ((Option[String], ByteString)) => Try[(Option[String], ByteString)] = {
+    case (usernm, remainder) =>
+      this.username = usernm
+      if (variableHeader.password) {
+        decodeUtf8String(remainder).flatMap[(Option[String], ByteString)] { case (passwordString, rem) => Success((Some(passwordString), rem)) }
+      } else {
+        Success((None, remainder))
+      }
   }
 }
 
@@ -46,27 +135,27 @@ protected[codec] object VariableConnectHeader {
 
   import MqttPacketDecoder._
 
-  private[this] val Level4Value: Int = 0x04
+  private val Level4Value: Int = 0x04
 
-  private[this] val UsernameFlag: Int = 0x80
+  private val UsernameFlag: Int = 0x80
 
-  private[this] val PasswordFlag: Int = 0x40
+  private val PasswordFlag: Int = 0x40
 
-  private[this] val WillRetainFlag: Int = 0x20
+  private val WillRetainFlag: Int = 0x20
 
-  private[this] val WillQoSMask: Int = 0x18
+  private val WillQoSMask: Int = 0x18
 
-  private[this] val WillQoSLeftShift: Int = 3
+  private val WillQoSLeftShift: Int = 3
 
-  private[this] val WillFlagFlag: Int = 0x04
+  private val WillFlagFlag: Int = 0x04
 
-  private[this] val CleanSessionFlag: Int = 0x02
+  private val CleanSessionFlag: Int = 0x02
 
-  private[this] val AtMostOncePat: Int = 0x00
+  private val AtMostOncePat: Int = 0x00
 
-  private[this] val AtLeastOncePat: Int = 0x01
+  private val AtLeastOncePat: Int = 0x01
 
-  private[this] val ExactlyOncePat: Int = 0x02
+  private val ExactlyOncePat: Int = 0x02
 
   def decode(buffer: ByteString): Try[(VariableConnectHeader, ByteString)] = {
     decodeUtf8String(buffer).flatMap[(VariableConnectHeader, ByteString)] {
@@ -79,7 +168,7 @@ protected[codec] object VariableConnectHeader {
     }
   }
 
-  private[this] def decodeConstantLengthPayload(protocolName: String, restBuffer: ByteString): Try[(VariableConnectHeader, ByteString)] = {
+  private def decodeConstantLengthPayload(protocolName: String, restBuffer: ByteString): Try[(VariableConnectHeader, ByteString)] = {
     val protocolLevel = if (restBuffer(0) == Level4Value) Level4 else UnsupportedProtocolLevel
     val username = (restBuffer(1) & UsernameFlag) == UsernameFlag
     val password = (restBuffer(1) & PasswordFlag) == PasswordFlag
