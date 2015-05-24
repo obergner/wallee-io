@@ -25,3 +25,7 @@ sealed trait ProtocolLevel
 /** Protocol level 4, i.e. MQTT 3.1.1.
  */
 object Level4 extends ProtocolLevel
+
+/** Protocol level that is not level 4.
+ */
+object UnsupportedProtocolLevel extends ProtocolLevel

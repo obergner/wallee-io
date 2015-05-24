@@ -25,7 +25,7 @@ import scala.util.{ Failure, Success, Try }
  *
  *  @tparam P Concrete [[MqttPacket]] type
  */
-trait MqttPacketDecoder[P <: MqttPacket] {
+abstract class MqttPacketDecoder[P <: MqttPacket](packetType: Byte) {
 
   /** Decode `frame`, returning the decoded [[MqttPacket]].
    *
@@ -35,20 +35,28 @@ trait MqttPacketDecoder[P <: MqttPacket] {
    *                                  contains a serialized packet of incompatible type
    */
   @throws[IllegalArgumentException]
-  def decode(frame: MqttFrame): P
+  final def decode(frame: MqttFrame): Try[P] = {
+    require(frame.packetType == packetType, s"Unsupported packet type: ${frame.packetType} - supported: $packetType")
+    doDecode(frame)
+  }
 
-  protected[this] def decodeUint16(payload: ByteString): Try[(Int, ByteString)] = {
+  protected[this] def doDecode(frame: MqttFrame): Try[P]
+}
+
+object MqttPacketDecoder {
+
+  protected[codec] def decodeUint16(payload: ByteString): Try[(Int, ByteString)] = {
     if (payload.size < 2) {
       Failure(MalformedMqttPacketException("Insufficient space left for encoding Uint16"))
     } else {
-      val lsb = 0xFF & payload(0).asInstanceOf[Int]
-      val msb = 0xFF & payload(1).asInstanceOf[Int]
+      val msb = 0xFF & payload(0).asInstanceOf[Int]
+      val lsb = 0xFF & payload(1).asInstanceOf[Int]
       val uint16: Int = lsb + (msb << 8)
       Success((uint16, payload.drop(2)))
     }
   }
 
-  protected[this] def decodeUtf8String(payload: ByteString): Try[(String, ByteString)] = {
+  protected[codec] def decodeUtf8String(payload: ByteString): Try[(String, ByteString)] = {
     decodeUint16(payload).flatMap[(String, ByteString)] {
       case (length, restPayload) =>
         if (restPayload.size < length) {
