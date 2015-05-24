@@ -40,13 +40,13 @@ class ConnectSpec extends FlatSpec with Matchers {
 
     val underTest = Connect(
       protocolName,
-      Level4,
+      ProtocolLevel.Level4,
       clientId,
       cleanSession = false,
       15,
       username,
       password,
-      ExactlyOnce,
+      QoS.ExactlyOnce,
       retainWill = false,
       willTopic,
       willMessage
@@ -63,7 +63,7 @@ class ConnectSpec extends FlatSpec with Matchers {
       6 + protocolName.getBytes(Charset.forName("UTF-8")).length + // Variable header
       2 + clientId.getBytes(Charset.forName("UTF-8")).length
 
-    val underTest = Connect(protocolName, Level4, clientId, cleanSession = false, 15)
+    val underTest = Connect(protocolName, ProtocolLevel.Level4, clientId, cleanSession = false, 15)
 
     assert(underTest.lengthInBytes == expectedLength)
   }
@@ -78,13 +78,13 @@ class ConnectSpec extends FlatSpec with Matchers {
     intercept[MalformedMqttPacketException] {
       Connect(
         protocolName,
-        Level4,
+        ProtocolLevel.Level4,
         clientId,
         cleanSession = false,
         15,
         Some(username),
         Some(password),
-        ExactlyOnce,
+        QoS.ExactlyOnce,
         retainWill = false,
         Some(willTopic),
         None
@@ -104,13 +104,13 @@ class ConnectSpec extends FlatSpec with Matchers {
     intercept[MalformedMqttPacketException] {
       Connect(
         protocolName,
-        Level4,
+        ProtocolLevel.Level4,
         clientId,
         cleanSession = false,
         keepAliveSecs,
         Some(username),
         Some(password),
-        ExactlyOnce,
+        QoS.ExactlyOnce,
         retainWill = false,
         Some(willTopic),
         Some(willMessage)

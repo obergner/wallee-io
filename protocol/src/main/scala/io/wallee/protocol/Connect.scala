@@ -34,7 +34,7 @@ final case class Connect(
   willMessage:   Option[String]
 )
     extends MqttPacket {
-  requireWellformed(willQoS != Reserved, "QoS 'Reserved' MUST NOT be used")
+  requireWellformed(willQoS != QoS.Reserved, "QoS 'Reserved' MUST NOT be used")
   requireWellformed(keepAliveSecs <= Connect.MaxKeepAliveSecs, "Keep alive must not exceed 2^16 seconds")
   requireWellformed(
     (willTopic.isDefined && willMessage.isDefined) || (willTopic.isEmpty && willMessage.isEmpty),
@@ -100,7 +100,7 @@ object Connect {
     keepAliveSecs,
     Some(username),
     Some(password),
-    AtMostOnce,
+    QoS.AtMostOnce,
     retainWill = false,
     None,
     None
@@ -120,7 +120,7 @@ object Connect {
     keepAliveSecs,
     None,
     None,
-    AtMostOnce,
+    QoS.AtMostOnce,
     retainWill = false,
     None,
     None

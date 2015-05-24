@@ -17,12 +17,13 @@
 package io.wallee.codec
 
 import akka.util.{ ByteString, CompactByteString }
-import io.wallee.protocol.{ Connack, ConnectionAccepted, MalformedMqttPacketException }
+import io.wallee.protocol.MalformedMqttPacketException
 import org.scalatest.{ FlatSpec, Matchers }
 
-import scala.util.{ Failure, Success, Try }
+import scala.util.{ Failure, Success }
 
 class MqttPacketDecoderSpec extends FlatSpec with Matchers {
+
   import MqttPacketDecoder._
 
   "An MqttPacketDecoder when decoding a Uint16 from a size 0 ByteString" should "report an error" in {

@@ -24,7 +24,7 @@ class ConnackSpec extends FlatSpec with Matchers {
     val expectedLength = 2 + // Fixed header
       +2 // Variable header
 
-    val underTest = Connack(sessionPresent = false, ConnectionAccepted)
+    val underTest = Connack(sessionPresent = false, ConnectReturnCode.ConnectionAccepted)
 
     assert(underTest.lengthInBytes == expectedLength)
   }

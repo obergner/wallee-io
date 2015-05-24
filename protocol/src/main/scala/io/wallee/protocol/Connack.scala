@@ -33,14 +33,17 @@ final case class Connack(sessionPresent: Boolean, returnCode: ConnectReturnCode)
  */
 sealed trait ConnectReturnCode
 
-object ConnectionAccepted extends ConnectReturnCode
+object ConnectReturnCode {
 
-object UnacceptableProtocolVersion extends ConnectReturnCode
+  object ConnectionAccepted extends ConnectReturnCode
 
-object IdentifierRejected extends ConnectReturnCode
+  object UnacceptableProtocolVersion extends ConnectReturnCode
 
-object ServerUnavailable extends ConnectReturnCode
+  object IdentifierRejected extends ConnectReturnCode
 
-object BadUsernameOrPassword extends ConnectReturnCode
+  object ServerUnavailable extends ConnectReturnCode
 
-object NotAuthorized extends ConnectReturnCode
+  object BadUsernameOrPassword extends ConnectReturnCode
+
+  object NotAuthorized extends ConnectReturnCode
+}

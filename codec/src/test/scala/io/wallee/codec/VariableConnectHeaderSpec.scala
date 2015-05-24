@@ -17,7 +17,7 @@
 package io.wallee.codec
 
 import akka.util.{ ByteString, CompactByteString }
-import io.wallee.protocol.{ AtLeastOnce, Level4, MalformedMqttPacketException }
+import io.wallee.protocol.{ MalformedMqttPacketException, ProtocolLevel, QoS }
 import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.util.{ Failure, Success }
@@ -65,11 +65,11 @@ class VariableConnectHeaderSpec extends FlatSpec with Matchers {
 
   "VariableConnectHeader#decode when given an input buffer containing a well-formed variable header" should "correctly decode variable header" in {
     val expectedProtocolName = "MQTT"
-    val expectedProtocolLevel = Level4
+    val expectedProtocolLevel = ProtocolLevel.Level4
     val expectedUsername = true
     val expectedPassword = true
     val expectedWillRetain = true
-    val expectedWillQoS = AtLeastOnce
+    val expectedWillQoS = QoS.AtLeastOnce
     val expectedWillFlag = true
     val expectedCleanSession = true
     val expectedKeepAliveSecs = 0x80

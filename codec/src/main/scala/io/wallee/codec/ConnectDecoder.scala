@@ -169,16 +169,16 @@ protected[codec] object VariableConnectHeader {
   }
 
   private def decodeConstantLengthPayload(protocolName: String, restBuffer: ByteString): Try[(VariableConnectHeader, ByteString)] = {
-    val protocolLevel = if (restBuffer(0) == Level4Value) Level4 else UnsupportedProtocolLevel
+    val protocolLevel = if (restBuffer(0) == Level4Value) ProtocolLevel.Level4 else ProtocolLevel.UnsupportedProtocolLevel
     val username = (restBuffer(1) & UsernameFlag) == UsernameFlag
     val password = (restBuffer(1) & PasswordFlag) == PasswordFlag
     val willRetain = (restBuffer(1) & WillRetainFlag) == WillRetainFlag
     val willQoSByte = (restBuffer(1) & WillQoSMask) >> WillQoSLeftShift
     val willQoS = willQoSByte match {
-      case AtMostOncePat  => AtMostOnce
-      case AtLeastOncePat => AtLeastOnce
-      case ExactlyOncePat => ExactlyOnce
-      case _              => Reserved
+      case AtMostOncePat  => QoS.AtMostOnce
+      case AtLeastOncePat => QoS.AtLeastOnce
+      case ExactlyOncePat => QoS.ExactlyOnce
+      case _              => QoS.Reserved
     }
     val willFlag = (restBuffer(1) & WillFlagFlag) == WillFlagFlag
     val cleanSession = (restBuffer(1) & CleanSessionFlag) == CleanSessionFlag
@@ -206,10 +206,10 @@ protected[codec] final class FixedHeaderFlags(packetTypeAndFlags: Byte) {
   def dup: Boolean = (packetTypeAndFlags & DupFlag) == DupFlag
 
   def qos: QoS = packetTypeAndFlags & QoSMask match {
-    case AtMostOncePat  => AtMostOnce
-    case AtLeastOncePat => AtLeastOnce
-    case ExactlyOncePat => ExactlyOnce
-    case _              => Reserved
+    case AtMostOncePat  => QoS.AtMostOnce
+    case AtLeastOncePat => QoS.AtLeastOnce
+    case ExactlyOncePat => QoS.ExactlyOnce
+    case _              => QoS.Reserved
   }
 
   def retain: Boolean = (packetTypeAndFlags & RetainFlag) == RetainFlag

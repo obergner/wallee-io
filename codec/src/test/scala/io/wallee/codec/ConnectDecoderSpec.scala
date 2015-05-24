@@ -111,7 +111,7 @@ class ConnectDecoderSpec extends FlatSpec with Matchers {
     )
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
-    val expectedResult = Connect("MQTT4", UnsupportedProtocolLevel, ClientId("surgemq"), cleanSession = false, 3080, None, None, AtMostOnce, retainWill = false, None, None)
+    val expectedResult = Connect("MQTT4", ProtocolLevel.UnsupportedProtocolLevel, ClientId("surgemq"), cleanSession = false, 3080, None, None, QoS.AtMostOnce, retainWill = false, None, None)
 
     ConnectDecoder.decode(frame) match {
       case Failure(_)            => fail("Should not have failed given well-formed input")
@@ -148,7 +148,7 @@ class ConnectDecoderSpec extends FlatSpec with Matchers {
     )
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
-    val expectedResult = Connect("MQTT", Level4, ClientId("surgemq"), cleanSession = true, 10, "surgemq", "verysecret", AtLeastOnce, retainWill = false, Topic("will"), "send me home")
+    val expectedResult = Connect("MQTT", ProtocolLevel.Level4, ClientId("surgemq"), cleanSession = true, 10, "surgemq", "verysecret", QoS.AtLeastOnce, retainWill = false, Topic("will"), "send me home")
 
     ConnectDecoder.decode(frame) match {
       case Failure(_)            => fail("Should not have failed given well-formed input")

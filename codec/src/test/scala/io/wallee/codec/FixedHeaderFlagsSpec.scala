@@ -16,7 +16,7 @@
 
 package io.wallee.codec
 
-import io.wallee.protocol.{ ExactlyOnce, AtLeastOnce, AtMostOnce }
+import io.wallee.protocol.QoS
 import org.scalatest.{ FlatSpec, Matchers }
 
 class FixedHeaderFlagsSpec extends FlatSpec with Matchers {
@@ -39,21 +39,21 @@ class FixedHeaderFlagsSpec extends FlatSpec with Matchers {
     val packetTypeAndFlags = 0x29.toByte
     val underTest = new FixedHeaderFlags(packetTypeAndFlags)
 
-    assert(underTest.qos == AtMostOnce)
+    assert(underTest.qos == QoS.AtMostOnce)
   }
 
   "A FixedHeaderFlags instance" should "correctly recognize QoS AtLeastOnce" in {
     val packetTypeAndFlags = 0x2B.toByte
     val underTest = new FixedHeaderFlags(packetTypeAndFlags)
 
-    assert(underTest.qos == AtLeastOnce)
+    assert(underTest.qos == QoS.AtLeastOnce)
   }
 
   "A FixedHeaderFlags instance" should "correctly recognize QoS ExactlyOnce" in {
     val packetTypeAndFlags = 0x2D.toByte
     val underTest = new FixedHeaderFlags(packetTypeAndFlags)
 
-    assert(underTest.qos == ExactlyOnce)
+    assert(underTest.qos == QoS.ExactlyOnce)
   }
 
   "A FixedHeaderFlags instance" should "correctly recognize that the retain flag is set" in {
