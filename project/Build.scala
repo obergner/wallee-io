@@ -22,6 +22,7 @@ object Build extends AutoPlugin {
       licenses +=("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
       scalaVersion := Version.scala,
       crossScalaVersions := List(scalaVersion.value),
+      autoAPIMappings := true,
       scalacOptions ++= List(
         "-unchecked",
         "-deprecation",

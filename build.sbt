@@ -4,6 +4,7 @@ name := "wallee-io"
 
 lazy val walleeIo = project
   .in(file("."))
+  .settings(unidocSettings: _*)
   .enablePlugins(AutomateHeaderPlugin, GitVersioning, GitBranchPrompt)
   .aggregate(shared, protocol, codec)
 
