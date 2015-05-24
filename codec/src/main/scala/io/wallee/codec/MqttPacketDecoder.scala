@@ -25,7 +25,7 @@ import scala.util.{ Failure, Success, Try }
  *
  *  @tparam P Concrete [[MqttPacket]] type
  */
-abstract class MqttPacketDecoder[P <: MqttPacket](packetType: Byte) {
+abstract class MqttPacketDecoder[+P <: MqttPacket](packetType: Byte) {
 
   /** Decode `frame`, returning the decoded [[MqttPacket]].
    *
@@ -44,6 +44,20 @@ abstract class MqttPacketDecoder[P <: MqttPacket](packetType: Byte) {
 }
 
 object MqttPacketDecoder {
+
+  /** Factory method for [[MqttPacketDecoder]]s given a packet type represented as a Byte.
+   *
+   *  @param packetType Type of MQTT packet to decode
+   *  @return An appropriate [[MqttPacketDecoder]]
+   *  @throws IllegalArgumentException If `packetType` is not supported
+   *
+   *  @see [[PacketType]]
+   */
+  @throws[IllegalArgumentException]
+  def forType(packetType: Byte): MqttPacketDecoder[MqttPacket] = packetType match {
+    case PacketType.Connect => ConnectDecoder
+    case _                  => throw new IllegalArgumentException(s"Unsupported packet type: $packetType")
+  }
 
   protected[codec] def decodeUint16(payload: ByteString): Try[(Int, ByteString)] = {
     if (payload.size < 2) {

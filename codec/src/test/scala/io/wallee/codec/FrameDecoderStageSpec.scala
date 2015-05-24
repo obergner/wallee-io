@@ -24,51 +24,51 @@ import akka.util.{ ByteStringBuilder, CompactByteString }
 import io.wallee.protocol.MalformedMqttPacketException
 import org.scalatest.{ FlatSpec, Matchers }
 
-class MqttFrameDecoderSpec extends FlatSpec with Matchers {
+class FrameDecoderStageSpec extends FlatSpec with Matchers {
 
   implicit val as = ActorSystem()
   implicit val fm = ActorFlowMaterializer()
 
-  "A new MqttFrameDecoder when given a single serialized packet in a single chunk as input" should "correctly decode that frame" in {
+  "A new FrameDecoderStage when given a single serialized packet in a single chunk as input" should "correctly decode that frame" in {
     val chunk = CompactByteString(0x10, 0x04, 0x01, 0x01, 0x01, 0x01)
     val expectedDecodedFrame = new MqttFrame(0x10, chunk.drop(2))
 
     Source.single(chunk)
-      .transform(() => new MqttFrameDecoder)
+      .transform(() => new FrameDecoderStage)
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
       .expectComplete()
   }
 
-  "A new MqttFrameDecoder when given a single serialized packet in two chunks as input" should "correctly decode that frame" in {
+  "A new FrameDecoderStage when given a single serialized packet in two chunks as input" should "correctly decode that frame" in {
     val firstChunk = CompactByteString(0x21, 0x04, 0x01)
     val secondChunk = CompactByteString(0x02, 0x03, 0x04)
     val expectedDecodedFrame = new MqttFrame(0x21, CompactByteString(0x01, 0x02, 0x03, 0x04))
 
     Source(List(firstChunk, secondChunk))
-      .transform(() => new MqttFrameDecoder)
+      .transform(() => new FrameDecoderStage)
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
       .expectComplete()
   }
 
-  "A new MqttFrameDecoder when given a single serialized packet in three chunks as input" should "correctly decode that frame" in {
+  "A new FrameDecoderStage when given a single serialized packet in three chunks as input" should "correctly decode that frame" in {
     val firstChunk = CompactByteString(0x31, 0x06, 0x01)
     val secondChunk = CompactByteString(0x02)
     val thirdChunk = CompactByteString(0x03, 0x04, 0x05, 0x06)
     val expectedDecodedFrame = new MqttFrame(0x31, CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05, 0x06))
 
     Source(List(firstChunk, secondChunk, thirdChunk))
-      .transform(() => new MqttFrameDecoder)
+      .transform(() => new FrameDecoderStage)
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
       .expectComplete()
   }
 
-  "A new MqttFrameDecoder when given two serialized packets in three chunks as input" should "correctly decode two frames" in {
+  "A new FrameDecoderStage when given two serialized packets in three chunks as input" should "correctly decode two frames" in {
     val firstChunk = CompactByteString(0x42, 0x05, 0x01)
     val secondChunk = CompactByteString(0x02, 0x03, 0x04, 0x05, 0x21)
     val thirdChunk = CompactByteString(0x03, 0x01, 0x02, 0x03, 0x00, 0x00, 0x00)
@@ -76,14 +76,14 @@ class MqttFrameDecoderSpec extends FlatSpec with Matchers {
     val expectedSecondDecodedFrame = new MqttFrame(0x21, CompactByteString(0x01, 0x02, 0x03))
 
     Source(List(firstChunk, secondChunk, thirdChunk))
-      .transform(() => new MqttFrameDecoder)
+      .transform(() => new FrameDecoderStage)
       .runWith(TestSink.probe[MqttFrame])
       .request(2)
       .expectNext(expectedFirstDecodedFrame, expectedSecondDecodedFrame)
       .expectComplete()
   }
 
-  "A new MqttFrameDecoder when given three serialized packets in five chunks as input" should "correctly decode three frames" in {
+  "A new FrameDecoderStage when given three serialized packets in five chunks as input" should "correctly decode three frames" in {
     val thirdRemainingLength = 1 + 42 * 128
     val firstChunk = CompactByteString(0x42, 0x05, 0x01)
     val secondChunk = CompactByteString(0x02, 0x03, 0x04, 0x05, 0x21)
@@ -107,21 +107,21 @@ class MqttFrameDecoderSpec extends FlatSpec with Matchers {
     val expectedThirdDecodedFrame = new MqttFrame(0x31, thirdFramePayload)
 
     Source(List(firstChunk, secondChunk, thirdChunk, fourthChunk, fifthChunk))
-      .transform(() => new MqttFrameDecoder)
+      .transform(() => new FrameDecoderStage)
       .runWith(TestSink.probe[MqttFrame])
       .request(3)
       .expectNext(expectedFirstDecodedFrame, expectedSecondDecodedFrame, expectedThirdDecodedFrame)
       .expectComplete()
   }
 
-  "A new MqttFrameDecoder when given a single serialized packet with illegal remaining length in three chunks as input" should
+  "A new FrameDecoderStage when given a single serialized packet with illegal remaining length in three chunks as input" should
     "propagate a MalformedMqttPacketException downstream" in {
       val firstChunk = CompactByteString(0x31, 0x81, 0xA0)
       val secondChunk = CompactByteString(0x80, 0x91)
       val thirdChunk = CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05)
 
       val error = Source(List(firstChunk, secondChunk, thirdChunk))
-        .transform(() => new MqttFrameDecoder)
+        .transform(() => new FrameDecoderStage)
         .runWith(TestSink.probe[MqttFrame])
         .request(1)
         .expectError()

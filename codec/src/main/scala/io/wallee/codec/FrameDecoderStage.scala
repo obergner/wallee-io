@@ -26,9 +26,9 @@ import scala.util.control.Breaks._
  *
  *  ATTENTION: This class is stateful and NOT thread safe.
  */
-class MqttFrameDecoder extends PushPullStage[ByteString, MqttFrame] {
+class FrameDecoderStage extends PushPullStage[ByteString, MqttFrame] {
 
-  import MqttFrameDecoder._
+  import FrameDecoderStage._
 
   private[this] var buffer: ByteString = ByteString.empty
 
@@ -76,7 +76,7 @@ class MqttFrameDecoder extends PushPullStage[ByteString, MqttFrame] {
 
 }
 
-object MqttFrameDecoder {
+object FrameDecoderStage {
 
   sealed trait Buffer {
 
