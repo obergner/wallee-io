@@ -21,4 +21,4 @@ package io.wallee.protocol
  *
  *  @param msg Explanatory message
  */
-case class MalformedMqttPacketException(msg: String) extends Exception(msg)
+final case class MalformedMqttPacketException(msg: String) extends Exception(msg)

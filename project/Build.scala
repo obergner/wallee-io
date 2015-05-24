@@ -5,6 +5,7 @@ import de.heikoseeberger.sbtheader.{AutomateHeaderPlugin, HeaderPlugin}
 import sbt.Keys._
 import sbt._
 import spray.revolver.RevolverPlugin.Revolver
+import wartremover._
 
 import scalariform.formatter.preferences._
 
@@ -68,5 +69,10 @@ object Build extends AutoPlugin {
       ) ++
       HeaderPlugin.settingsFor(Compile, Test) ++
       // Revolver settings
-      Revolver.settings
+      Revolver.settings ++
+      // Wartremover settings
+      wartremoverSettings ++
+      List(
+        wartremoverErrors in(Compile, compile) ++= Warts.allBut(Wart.Throw, Wart.Any, Wart.Nothing, Wart.NoNeedForMonad)
+      )
 }

@@ -37,6 +37,7 @@ object ConnectDecoder extends MqttPacketDecoder[Connect](PacketType.Connect) {
   }
 }
 
+@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
 protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: VariableConnectHeader) {
 
   import MqttPacketDecoder._
@@ -57,23 +58,21 @@ protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: Va
       .flatMap[(Option[String], ByteString)](decodeWillMessage)
       .flatMap[(Option[String], ByteString)](decodeUsername)
       .flatMap[(Option[String], ByteString)](decodePassword)
-      .flatMap[Connect]({
+      .map[Connect]({
         case (passwd, remainder) =>
           this.password = passwd
-          Success(
-            Connect(
-              variableHeader.protocolName,
-              variableHeader.protocolLevel,
-              clientId,
-              variableHeader.cleanSession,
-              variableHeader.keepAliveSecs,
-              username,
-              password,
-              variableHeader.willQoS,
-              variableHeader.willRetain,
-              willTopic,
-              willMessage
-            )
+          Connect(
+            variableHeader.protocolName,
+            variableHeader.protocolLevel,
+            clientId,
+            variableHeader.cleanSession,
+            variableHeader.keepAliveSecs,
+            username,
+            password,
+            variableHeader.willQoS,
+            variableHeader.willRetain,
+            willTopic,
+            willMessage
           )
       })
   }
@@ -82,7 +81,7 @@ protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: Va
     case (cltId, remainder) =>
       this.clientId = cltId
       if (variableHeader.willFlag) {
-        decodeUtf8String(remainder).flatMap[(Option[Topic], ByteString)] { case (topicString, rem) => Success((Some(Topic(topicString)), rem)) }
+        decodeUtf8String(remainder).map[(Option[Topic], ByteString)] { case (topicString, rem) => (Some(Topic(topicString)), rem) }
       } else {
         Success((None, remainder))
       }
@@ -92,7 +91,7 @@ protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: Va
     case (willTpc, remainder) =>
       this.willTopic = willTpc
       if (variableHeader.willFlag) {
-        decodeUtf8String(remainder).flatMap[(Option[String], ByteString)] { case (messageString, rem) => Success((Some(messageString), rem)) }
+        decodeUtf8String(remainder).map[(Option[String], ByteString)] { case (messageString, rem) => (Some(messageString), rem) }
       } else {
         Success((None, remainder))
       }
@@ -102,7 +101,7 @@ protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: Va
     case (willMsg, remainder) =>
       this.willMessage = willMsg
       if (variableHeader.username) {
-        decodeUtf8String(remainder).flatMap[(Option[String], ByteString)] { case (usernameString, rem) => Success((Some(usernameString), rem)) }
+        decodeUtf8String(remainder).map[(Option[String], ByteString)] { case (usernameString, rem) => (Some(usernameString), rem) }
       } else {
         Success((None, remainder))
       }
@@ -112,7 +111,7 @@ protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: Va
     case (usernm, remainder) =>
       this.username = usernm
       if (variableHeader.password) {
-        decodeUtf8String(remainder).flatMap[(Option[String], ByteString)] { case (passwordString, rem) => Success((Some(passwordString), rem)) }
+        decodeUtf8String(remainder).map[(Option[String], ByteString)] { case (passwordString, rem) => (Some(passwordString), rem) }
       } else {
         Success((None, remainder))
       }

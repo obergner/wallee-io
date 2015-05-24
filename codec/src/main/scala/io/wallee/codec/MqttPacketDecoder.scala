@@ -63,8 +63,8 @@ object MqttPacketDecoder {
     if (payload.size < 2) {
       Failure(MalformedMqttPacketException("Insufficient space left for encoding Uint16"))
     } else {
-      val msb = 0xFF & payload(0).asInstanceOf[Int]
-      val lsb = 0xFF & payload(1).asInstanceOf[Int]
+      val msb = 0xFF & payload(0).toInt
+      val lsb = 0xFF & payload(1).toInt
       val uint16: Int = lsb + (msb << 8)
       Success((uint16, payload.drop(2)))
     }

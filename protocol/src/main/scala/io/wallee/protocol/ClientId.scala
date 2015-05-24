@@ -22,4 +22,4 @@ package io.wallee.protocol
  *
  *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718031
  */
-case class ClientId(value: String)
+final case class ClientId(value: String)

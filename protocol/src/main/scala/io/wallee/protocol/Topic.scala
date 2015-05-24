@@ -18,4 +18,4 @@ package io.wallee.protocol
 
 /** An MQTT topic.
  */
-case class Topic(value: String)
+final case class Topic(value: String)

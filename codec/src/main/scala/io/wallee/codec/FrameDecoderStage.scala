@@ -26,6 +26,7 @@ import scala.util.control.Breaks._
  *
  *  ATTENTION: This class is stateful and NOT thread safe.
  */
+@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
 class FrameDecoderStage extends PushPullStage[ByteString, MqttFrame] {
 
   import FrameDecoderStage._
@@ -130,6 +131,7 @@ object FrameDecoderStage {
     override def onNewInput(): DecodingState = throw new UnsupportedOperationException("IllegalRemainingLength is a terminal state")
   }
 
+  @SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
   final case class ConsumingVariableHeaderAndPayload(buffer: Buffer, firstHeaderByte: Byte, remainingLength: Int)
       extends DecodingState(buffer) {
 
