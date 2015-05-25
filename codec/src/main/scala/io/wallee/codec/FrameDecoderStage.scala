@@ -67,7 +67,7 @@ class FrameDecoderStage extends PushPullStage[ByteString, MqttFrame] {
           ctx.push(frame)
         case IllegalRemainingLength(_) =>
           currentState = NoDataConsumed(bufferAccess)
-          ctx.fail(new MalformedMqttPacketException("Illegal remaining length field in MQTT packet")) // FIXME: We should rather close this connection
+          ctx.fail(new MalformedMqttPacketException("Illegal remaining length field in MQTT packet")) // FIXME: We should rather close this playground
         case _ => ctx.pull()
       }
     }

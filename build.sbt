@@ -6,7 +6,7 @@ lazy val walleeIo = project
   .in(file("."))
   .settings(unidocSettings: _*)
   .enablePlugins(AutomateHeaderPlugin, GitVersioning, GitBranchPrompt)
-  .aggregate(shared, protocol, codec)
+  .aggregate(shared, protocol, codec, connection)
 
 lazy val shared = project
   .in(file("shared"))
@@ -20,5 +20,15 @@ lazy val codec = project
   .in(file("codec"))
   .settings(libraryDependencies ++= codecDeps)
   .dependsOn(protocol)
+
+lazy val connection = project
+  .in(file("connection"))
+  .settings(libraryDependencies ++= connectionDeps)
+  .dependsOn(shared, protocol, codec)
+
+lazy val playground = project
+  .in(file("playground"))
+  .settings(libraryDependencies ++= connectionDeps)
+  .dependsOn(protocol, codec, connection)
 
 initialCommands := """|import io.wallee._""".stripMargin
