@@ -17,17 +17,18 @@
 package io.wallee.codec
 
 import akka.stream.stage.{ Context, PushStage, SyncDirective }
+import akka.util.ByteString
 import io.wallee.protocol.MqttPacket
 
 import scala.util.{ Failure, Success }
 
-/** Transform [[MqttFrame]]s into [[MqttPacket]]s.
+/** Flow stage for encoding [[MqttPacket]]s.
  */
-final class DecoderStage extends PushStage[MqttFrame, MqttPacket] {
+class EncoderStage extends PushStage[MqttPacket, ByteString] {
 
-  override def onPush(elem: MqttFrame, ctx: Context[MqttPacket]): SyncDirective = {
-    MqttPacketDecoder.decode(elem) match {
-      case Success(packet) => ctx.push(packet)
+  override def onPush(elem: MqttPacket, ctx: Context[ByteString]): SyncDirective = {
+    MqttPacketEncoder.encode(elem) match {
+      case Success(buffer) => ctx.push(buffer)
       case Failure(ex)     => ctx.fail(ex)
     }
   }

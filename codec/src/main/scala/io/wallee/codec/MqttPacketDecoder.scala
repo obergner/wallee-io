@@ -45,18 +45,14 @@ abstract class MqttPacketDecoder[+P <: MqttPacket](packetType: Byte) {
 
 object MqttPacketDecoder {
 
-  /** Factory method for [[MqttPacketDecoder]]s given a packet type represented as a Byte.
+  /** Decode `frame` into an [[MqttPacket]].
    *
-   *  @param packetType Type of MQTT packet to decode
-   *  @return An appropriate [[MqttPacketDecoder]]
-   *  @throws IllegalArgumentException If `packetType` is not supported
-   *
-   *  @see [[PacketType]]
+   *  @param frame [[MqttFrame]] to decode
+   *  @return Decoded [[MqttPacket]], or failure
    */
-  @throws[IllegalArgumentException]
-  def forType(packetType: Byte): MqttPacketDecoder[MqttPacket] = packetType match {
-    case PacketType.Connect => ConnectDecoder
-    case _                  => throw new IllegalArgumentException(s"Unsupported packet type: $packetType")
+  def decode(frame: MqttFrame): Try[MqttPacket] = frame.packetType match {
+    case PacketType.Connect => ConnectDecoder.decode(frame)
+    case _                  => Failure(new IllegalArgumentException(s"Unsupported packet type: ${frame.packetType}"))
   }
 
   protected[codec] def decodeUint16(payload: ByteString): Try[(Int, ByteString)] = {

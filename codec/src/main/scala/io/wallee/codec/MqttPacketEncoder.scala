@@ -19,7 +19,7 @@ package io.wallee.codec
 import java.nio.charset.Charset
 
 import akka.util.{ ByteString, CompactByteString }
-import io.wallee.protocol.{ MalformedMqttPacketException, MqttPacket }
+import io.wallee.protocol.{ Connack, MalformedMqttPacketException, MqttPacket }
 
 import scala.util.{ Failure, Success, Try }
 
@@ -31,6 +31,17 @@ abstract class MqttPacketEncoder[P <: MqttPacket] {
 }
 
 object MqttPacketEncoder {
+
+  /** Encode MQTT `packet`.
+   *
+   *  @param packet [[MqttPacket]] to encode
+   *  @tparam P Concrete [[MqttPacket]] type parameter
+   *  @return Encoded `packet`, or failure
+   */
+  def encode[P <: MqttPacket](packet: P): Try[ByteString] = packet match {
+    case p @ Connack(_, _) => ConnackEncoder.encode(p)
+    case _                 => Failure(new IllegalArgumentException(s"Unsupported MQTT packet: $packet"))
+  }
 
   protected[codec] val MaxUint16: Int = scala.math.pow(2, 16).floor.toInt
 
