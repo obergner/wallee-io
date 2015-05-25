@@ -26,7 +26,7 @@ final case class Connack(sessionPresent: Boolean, returnCode: ConnectReturnCode)
    *
    *  @return Length on the wire sans fixed header
    */
-  override protected def remainingLength: Int = 2
+  override def remainingLength: Int = 2
 }
 
 /** Trait defining possible return codes in response to a Connect packet.
@@ -46,4 +46,5 @@ object ConnectReturnCode {
   object BadUsernameOrPassword extends ConnectReturnCode
 
   object NotAuthorized extends ConnectReturnCode
+
 }

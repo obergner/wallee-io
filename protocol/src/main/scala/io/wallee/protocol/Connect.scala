@@ -41,7 +41,7 @@ final case class Connect(
     "Either will topic and will message need to be given, or neither"
   )
 
-  override protected def remainingLength: Int = {
+  override def remainingLength: Int = {
     Connect.VariableHeaderBaseLengthInBytes +
       encodedLengthInBytesOf(protocolName) +
       encodedLengthInBytesOf(clientId) +

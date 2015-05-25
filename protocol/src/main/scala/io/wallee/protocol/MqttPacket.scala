@@ -27,6 +27,8 @@ abstract class MqttPacket {
   /** This MQTT packet's length in bytes on the wire.
    *
    *  @return Length in bytes on the wire
+   *
+   *  @todo Consider removing this method
    */
   def lengthInBytes: Int = {
     val remainingLengthBytes: Int = (scala.math.log(remainingLength) / scala.math.log(MqttPacket.RemainingLengthBase)).floor.toInt + 1
@@ -37,7 +39,7 @@ abstract class MqttPacket {
    *
    *  @return Length on the wire sans fixed header
    */
-  protected def remainingLength: Int
+  def remainingLength: Int
 }
 
 object MqttPacket {

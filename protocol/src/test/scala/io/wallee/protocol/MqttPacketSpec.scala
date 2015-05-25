@@ -23,7 +23,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with remainingLength < 128" should "report correct lengthInBytes" in {
     val remLength = 127
     val underTest = new MqttPacket {
-      override protected def remainingLength: Int = remLength
+      override def remainingLength: Int = remLength
     }
 
     assert(underTest.lengthInBytes == remLength + 2)
@@ -32,7 +32,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with remainingLength == 128" should "report correct lengthInBytes" in {
     val remLength = 128
     val underTest = new MqttPacket {
-      override protected def remainingLength: Int = remLength
+      override def remainingLength: Int = remLength
     }
 
     assert(underTest.lengthInBytes == remLength + 3)
@@ -41,7 +41,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with 128 <= remainingLength < 16384" should "report correct lengthInBytes" in {
     val remLength = 16383
     val underTest = new MqttPacket {
-      override protected def remainingLength: Int = remLength
+      override def remainingLength: Int = remLength
     }
 
     assert(underTest.lengthInBytes == remLength + 3)
@@ -50,7 +50,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with remainingLength == 16384" should "report correct lengthInBytes" in {
     val remLength = 16384
     val underTest = new MqttPacket {
-      override protected def remainingLength: Int = remLength
+      override def remainingLength: Int = remLength
     }
 
     assert(underTest.lengthInBytes == remLength + 4)
@@ -59,7 +59,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with 16384 <= remainingLength < 2097152" should "report correct lengthInBytes" in {
     val remLength = 2097151
     val underTest = new MqttPacket {
-      override protected def remainingLength: Int = remLength
+      override def remainingLength: Int = remLength
     }
 
     assert(underTest.lengthInBytes == remLength + 4)
@@ -68,7 +68,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with remainingLength == 2097152" should "report correct lengthInBytes" in {
     val remLength = 2097152
     val underTest = new MqttPacket {
-      override protected def remainingLength: Int = remLength
+      override def remainingLength: Int = remLength
     }
 
     assert(underTest.lengthInBytes == remLength + 5)
@@ -77,7 +77,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
   "An MqttPacket with 2097152 <= remainingLength < 268435456" should "report correct lengthInBytes" in {
     val remLength = 268435455
     val underTest = new MqttPacket {
-      override protected def remainingLength: Int = remLength
+      override def remainingLength: Int = remLength
     }
 
     assert(underTest.lengthInBytes == remLength + 5)
@@ -88,7 +88,7 @@ class MqttPacketSpec extends FlatSpec with Matchers {
 
     intercept[MalformedMqttPacketException] {
       new MqttPacket {
-        override protected def remainingLength: Int = remLength
+        override def remainingLength: Int = remLength
       }
     }
   }
