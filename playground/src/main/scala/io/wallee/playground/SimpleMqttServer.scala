@@ -19,23 +19,15 @@ package io.wallee.playground
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.{ Sink, Tcp }
+import akka.stream.scaladsl.{Sink, Tcp}
 import com.typesafe.config.ConfigFactory
 import io.wallee.connection.impl.DefaultMqttConnectionFactory
+import io.wallee.shared.plugin.auth.AuthenticationPluginFactoryLoader
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 object SimpleMqttServer {
 
-  /** Use without parameters to start both client and
-   *  server.
-   *
-   *  Use parameters `server 0.0.0.0 6001` to start server listening on port 6001.
-   *
-   *  Use parameters `client 127.0.0.1 6001` to start client connecting to
-   *  server on 127.0.0.1:6001.
-   *
-   */
   def main(args: Array[String]): Unit = {
     val system = ActorSystem("SimpleMqttServer")
     val (address, port) = ("127.0.0.1", 1883)
@@ -49,7 +41,13 @@ object SimpleMqttServer {
     val log = Logging(system, getClass)
 
     val config = ConfigFactory.load()
-    val connectionFactory = new DefaultMqttConnectionFactory(config, system)
+
+    val authenticationPluginFactoryLoader = new
+        AuthenticationPluginFactoryLoader(Thread.currentThread().getContextClassLoader)
+    val authenticationPluginFactory = authenticationPluginFactoryLoader.load()
+    val authenticationPlugin = authenticationPluginFactory.apply(config)
+
+    val connectionFactory = new DefaultMqttConnectionFactory(config, authenticationPlugin, system)
 
     val handler = Sink.foreach[Tcp.IncomingConnection] { conn =>
       log.info(s"Client connected: [${conn.remoteAddress}]")

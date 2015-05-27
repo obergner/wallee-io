@@ -36,16 +36,18 @@ object Build extends AutoPlugin {
         "-implicits"
       ),
       javacOptions ++= Seq(
-        "-Xmx1024m",
-        "-Xms256m",
-        "-Xss10m"
+        "-source", "1.8",
+        "-target", "1.8",
+        "-Xlint:unchecked",
+        "-deprecation",
+        "-encoding", "UTF-8"
       ),
       javaOptions ++= Seq(
         "-Xms256m",
         "-Xmx1536m",
         "-Djava.awt.headless=true"
       ),
-      unmanagedSourceDirectories.in(Compile) := List(scalaSource.in(Compile).value),
+      unmanagedSourceDirectories.in(Compile) := List(scalaSource.in(Compile).value, javaSource.in(Compile).value),
       unmanagedSourceDirectories.in(Test) := List(scalaSource.in(Test).value)
     ) ++
       // Scalariform settings

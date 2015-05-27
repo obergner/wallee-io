@@ -34,4 +34,8 @@ object Dependencies {
   val codecDeps            = commonDeps ++ Seq(Library.akkaActor, Library.akkaStreams, Library.akkaTestkit % Test, Library.akkaStreamsTestkit % Test)
 
   val connectionDeps       = commonDeps
+
+  val playgroundDeps       = commonDeps
+
+  val spiDeps              = commonDeps
 }
