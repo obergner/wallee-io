@@ -54,5 +54,5 @@ object PacketType {
 
   val Reserved2: Byte = 0x0F
 
-  def parse(firstFixedHeaderByte: Byte): Byte = (firstFixedHeaderByte >> 4).toByte
+  def parse(firstFixedHeaderByte: Byte): Byte = ((firstFixedHeaderByte >> 4) & 0x0F).toByte
 }

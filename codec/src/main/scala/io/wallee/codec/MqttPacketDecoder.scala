@@ -52,6 +52,7 @@ object MqttPacketDecoder {
    */
   def decode(frame: MqttFrame): Try[MqttPacket] = frame.packetType match {
     case PacketType.Connect => ConnectDecoder.decode(frame)
+    case PacketType.Pingreq => PingReqDecoder.decode(frame)
     case _                  => Failure(new IllegalArgumentException(s"Unsupported packet type: ${frame.packetType}"))
   }
 

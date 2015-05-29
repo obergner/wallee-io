@@ -20,7 +20,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
-import akka.util.CompactByteString
+import akka.util.{ ByteString, CompactByteString }
 import io.wallee.protocol._
 import org.scalatest.{ FlatSpec, Matchers }
 
@@ -59,6 +59,21 @@ class DecoderStageSpec extends FlatSpec with Matchers {
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val expectedResult = Connect("MQTT", ProtocolLevel.Level4, ClientId("surgemq"), cleanSession = true, 10, "surgemq", "verysecret", QoS.AtLeastOnce, retainWill = false, Topic("will"), "send me home")
+
+    Source.single[MqttFrame](frame)
+      .transform(() => new DecoderStage)
+      .runWith(TestSink.probe[MqttPacket])
+      .request(1)
+      .expectNext(expectedResult)
+      .expectComplete()
+  }
+
+  "PingReqDecoder when processing a well-formed MqttFrame of type PINGREQ" should "transform it into a PingReq packet" in {
+    val typeAndFlags: Int = 0xC0
+    val variableHeaderPlusPayload = ByteString.empty
+    val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
+
+    val expectedResult = PingReq()
 
     Source.single[MqttFrame](frame)
       .transform(() => new DecoderStage)

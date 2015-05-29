@@ -21,7 +21,7 @@ import akka.stream.ActorFlowMaterializer
 import akka.stream.scaladsl.Source
 import akka.stream.testkit.scaladsl.TestSink
 import akka.util.{ ByteString, CompactByteString }
-import io.wallee.protocol.{ Connack, ConnectReturnCode, MqttPacket }
+import io.wallee.protocol.{ Connack, ConnectReturnCode, MqttPacket, PingResp }
 import org.scalatest.{ FlatSpec, Matchers }
 
 class EncoderStageSpec extends FlatSpec with Matchers {
@@ -34,6 +34,18 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val connack = Connack(sessionPresent = true, ConnectReturnCode.BadUsernameOrPassword)
 
     Source.single[MqttPacket](connack)
+      .transform(() => new EncoderStage)
+      .runWith(TestSink.probe[ByteString])
+      .request(1)
+      .expectNext(expectedResult)
+      .expectComplete()
+  }
+
+  "An EncoderStage given a well-formed PINGRESP packet as input" should "propagate correctly encoded packet" in {
+    val expectedResult = CompactByteString(0xD0, 0x00)
+    val pingResp = PingResp()
+
+    Source.single[MqttPacket](pingResp)
       .transform(() => new EncoderStage)
       .runWith(TestSink.probe[ByteString])
       .request(1)

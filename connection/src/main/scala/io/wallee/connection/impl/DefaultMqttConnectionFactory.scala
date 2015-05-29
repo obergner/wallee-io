@@ -20,12 +20,14 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.scaladsl.FlexiRoute.{ DemandFromAll, RouteLogic }
 import akka.stream.scaladsl._
+import akka.stream.stage.{ Context, PushStage, SyncDirective }
 import akka.stream.{ FanOutShape2, OperationAttributes }
 import akka.util.ByteString
 import com.typesafe.config.Config
 import io.wallee.codec.{ DecoderStage, EncoderStage, FrameDecoderStage, MqttFrame }
 import io.wallee.connection.MqttConnectionFactory
 import io.wallee.connection.auth.ConnectHandler
+import io.wallee.connection.logging.TcpConnectionLogging
 import io.wallee.connection.monitor.{ LogMqttPackets, LogNetworkPackets }
 import io.wallee.protocol.{ Connect, MqttPacket }
 import io.wallee.spi.auth.AuthenticationPlugin
@@ -61,22 +63,23 @@ class DefaultMqttConnectionFactory(
     (input.inlet, output.outlet)
   }
 
-  private[this] def parallelProcessingPipelines(conn: Tcp.IncomingConnection): Flow[MqttPacket, MqttPacket, _] = Flow() { implicit builder: FlowGraph.Builder[Unit] =>
-    import FlowGraph.Implicits._
+  private[this] def parallelProcessingPipelines(conn: Tcp.IncomingConnection): Flow[MqttPacket, MqttPacket, _] =
+    Flow() { implicit builder: FlowGraph.Builder[Unit] =>
+      import FlowGraph.Implicits._
 
-    val packetRouter: PacketRouting = new PacketRouting
-    val fanOut = builder.add(packetRouter)
-    val fanIn = builder.add(Merge[MqttPacket](2))
+      val packetRouter: PacketRouting = new PacketRouting
+      val fanOut = builder.add(packetRouter)
+      val fanIn = builder.add(Merge[MqttPacket](2))
 
-    fanOut.out0
-      .transform(() => new ConnectHandler(conn, authenticationPlugin))
-      .~>(fanIn.in(0))
+      fanOut.out0
+        .transform(() => new ConnectHandler(conn, authenticationPlugin))
+        .~>(fanIn.in(0))
 
-    fanOut.out1
-      .~>(fanIn.in(1))
+      fanOut.out1
+        .~>(fanIn.in(1))
 
-    (fanOut.in, fanIn.out)
-  }
+      (fanOut.in, fanIn.out)
+    }
 }
 
 final class PacketRouting
@@ -85,7 +88,7 @@ final class PacketRouting
     ) {
 
   override def createRouteLogic(s: FanOutShape2[MqttPacket, Connect, MqttPacket]): RouteLogic[MqttPacket] = new RouteLogic[MqttPacket] {
-    override def initialState = State[Any](DemandFromAll(s)) {
+    override def initialState: State[_] = State[Any](DemandFromAll(s)) {
       (ctx, _, packet) =>
         packet match {
           case p: Connect    => ctx.emit[Connect](s.out0)(p)
@@ -94,5 +97,15 @@ final class PacketRouting
 
         SameState
     }
+  }
+}
+
+final class ConnectionClose(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
+    extends PushStage[MqttPacket, MqttPacket] with TcpConnectionLogging {
+
+  override def onPush(elem: MqttPacket, ctx: Context[MqttPacket]): SyncDirective = {
+    log.warning(s"Closing connetion to remote client [${connection.remoteAddress} ...")
+    log.warning(s"Connetion to remote client [${connection.remoteAddress} closed")
+    ctx.push(elem)
   }
 }

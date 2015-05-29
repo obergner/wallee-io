@@ -25,7 +25,10 @@ import io.wallee.spi.auth.{ AuthenticationPlugin, Credentials }
 
 /** A [[PushStage]] for handling [[Connect]] packets, i.e. authenticating clients.
  */
-class ConnectHandler(protected[this] val connection: Tcp.IncomingConnection, authenticationPlugin: AuthenticationPlugin)(protected[this] implicit val system: ActorSystem)
+class ConnectHandler(
+  protected[this] val connection: Tcp.IncomingConnection,
+  authenticationPlugin:           AuthenticationPlugin
+)(protected[this] implicit val system: ActorSystem)
     extends PushStage[Connect, Connack] with TcpConnectionLogging {
 
   override def onPush(elem: Connect, ctx: Context[Connack]): SyncDirective = {

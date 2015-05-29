@@ -19,7 +19,7 @@ package io.wallee.codec
 import java.nio.charset.Charset
 
 import akka.util.{ ByteString, CompactByteString }
-import io.wallee.protocol.{ Connack, MalformedMqttPacketException, MqttPacket }
+import io.wallee.protocol.{ Connack, MalformedMqttPacketException, MqttPacket, PingResp }
 
 import scala.util.{ Failure, Success, Try }
 
@@ -40,6 +40,7 @@ object MqttPacketEncoder {
    */
   def encode[P <: MqttPacket](packet: P): Try[ByteString] = packet match {
     case p @ Connack(_, _) => ConnackEncoder.encode(p)
+    case p @ PingResp()    => PingRespEncoder.encode(p)
     case _                 => Failure(new IllegalArgumentException(s"Unsupported MQTT packet: $packet"))
   }
 
