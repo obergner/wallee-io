@@ -16,9 +16,11 @@
 
 package io.wallee.codec
 
+import java.net.InetSocketAddress
+
 import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{ Flow, Source, Tcp }
 import akka.stream.testkit.scaladsl.TestSink
 import akka.util.{ ByteString, CompactByteString }
 import io.wallee.protocol._
@@ -27,7 +29,10 @@ import org.scalatest.{ FlatSpec, Matchers }
 class DecoderStageSpec extends FlatSpec with Matchers {
 
   implicit val as = ActorSystem()
+
   implicit val fm = ActorFlowMaterializer()
+
+  val connection = Tcp.IncomingConnection(new InetSocketAddress(111), new InetSocketAddress(222), Flow[ByteString])
 
   "DecoderStage when processing a well-formed MqttFrame of type CONNECT" should "transform it into a Connect packet" in {
     // A telltale case of unabashed robbery: https://github.com/surgemq/surgemq/blob/master/message/connect_test.go
@@ -61,7 +66,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
     val expectedResult = Connect("MQTT", ProtocolLevel.Level4, ClientId("surgemq"), cleanSession = true, 10, "surgemq", "verysecret", QoS.AtLeastOnce, retainWill = false, Topic("will"), "send me home")
 
     Source.single[MqttFrame](frame)
-      .transform(() => new DecoderStage)
+      .transform(() => new DecoderStage(connection))
       .runWith(TestSink.probe[MqttPacket])
       .request(1)
       .expectNext(expectedResult)
@@ -76,7 +81,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
     val expectedResult = PingReq()
 
     Source.single[MqttFrame](frame)
-      .transform(() => new DecoderStage)
+      .transform(() => new DecoderStage(connection))
       .runWith(TestSink.probe[MqttPacket])
       .request(1)
       .expectNext(expectedResult)
@@ -113,7 +118,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val error = Source.single[MqttFrame](frame)
-      .transform(() => new DecoderStage)
+      .transform(() => new DecoderStage(connection))
       .runWith(TestSink.probe[MqttPacket])
       .request(1)
       .expectError()
@@ -151,7 +156,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val error = Source.single[MqttFrame](frame)
-      .transform(() => new DecoderStage)
+      .transform(() => new DecoderStage(connection))
       .runWith(TestSink.probe[MqttPacket])
       .request(1)
       .expectError()

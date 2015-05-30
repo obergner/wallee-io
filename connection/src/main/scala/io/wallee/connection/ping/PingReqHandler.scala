@@ -14,23 +14,21 @@
  * limitations under the License.
  */
 
-package io.wallee.connection.logging
+package io.wallee.connection.ping
 
 import akka.actor.ActorSystem
-import akka.event.{ LogSource, Logging }
 import akka.stream.scaladsl.Tcp
+import akka.stream.stage.{ Context, PushStage, SyncDirective }
+import io.wallee.protocol._
+import io.wallee.shared.logging.TcpConnectionLogging
 
-/** Support meaningful log output by including remote address.
+/** A [[PushStage]] for handling [[PingReq]] packets, i.e. responding with a [[PingResp]].
  */
-trait TcpConnectionLogging {
+class PingReqHandler(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
+    extends PushStage[PingReq, PingResp] with TcpConnectionLogging {
 
-  protected[this] val system: ActorSystem
-
-  protected[this] def connection: Tcp.IncomingConnection
-
-  protected[this] implicit val logSource: LogSource[AnyRef] = new LogSource[AnyRef] {
-    override def genString(t: AnyRef): String = s"MQTTClientConnection[${connection.remoteAddress}]"
+  override def onPush(elem: PingReq, ctx: Context[PingResp]): SyncDirective = {
+    log.debug(s"Received PingReq - sending PingResp")
+    ctx.push(PingResp())
   }
-
-  protected[this] val log = Logging(system, this)
 }

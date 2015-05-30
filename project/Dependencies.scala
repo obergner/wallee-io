@@ -25,13 +25,19 @@ object Library {
 }
 
 object Dependencies {
-  val commonDeps           = Seq(Library.log4jCore, Library.akkaLog4j, Library.scalaTest % Test)
+  val commonDeps           = Seq(Library.akkaActor,
+    Library.akkaStreams,
+    Library.log4jCore,
+    Library.akkaLog4j,
+    Library.scalaTest % Test,
+    Library.akkaTestkit % Test,
+    Library.akkaStreamsTestkit % Test)
 
   val sharedDeps           = commonDeps
 
   val protocolDeps         = commonDeps
 
-  val codecDeps            = commonDeps ++ Seq(Library.akkaActor, Library.akkaStreams, Library.akkaTestkit % Test, Library.akkaStreamsTestkit % Test)
+  val codecDeps            = commonDeps
 
   val connectionDeps       = commonDeps
 

@@ -24,7 +24,7 @@ lazy val protocol = project
 lazy val codec = project
   .in(file("codec"))
   .settings(libraryDependencies ++= codecDeps)
-  .dependsOn(protocol)
+  .dependsOn(shared, protocol)
 
 lazy val connection = project
   .in(file("connection"))

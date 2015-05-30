@@ -21,15 +21,17 @@ import akka.event.Logging
 import akka.stream.scaladsl.FlexiRoute.{ DemandFromAll, RouteLogic }
 import akka.stream.scaladsl._
 import akka.stream.stage.{ Context, PushStage, SyncDirective }
-import akka.stream.{ FanOutShape2, OperationAttributes }
+import akka.stream.{ FanOutShape3, OperationAttributes }
 import akka.util.ByteString
 import com.typesafe.config.Config
 import io.wallee.codec.{ DecoderStage, EncoderStage, FrameDecoderStage, MqttFrame }
 import io.wallee.connection.MqttConnectionFactory
 import io.wallee.connection.auth.ConnectHandler
-import io.wallee.connection.logging.TcpConnectionLogging
+import io.wallee.connection.error.DecodingErrorLogger
 import io.wallee.connection.monitor.{ LogMqttPackets, LogNetworkPackets }
-import io.wallee.protocol.{ Connect, MqttPacket }
+import io.wallee.connection.ping.PingReqHandler
+import io.wallee.protocol.{ Connect, MqttPacket, PingReq }
+import io.wallee.shared.logging.TcpConnectionLogging
 import io.wallee.spi.auth.AuthenticationPlugin
 
 /**
@@ -51,12 +53,13 @@ class DefaultMqttConnectionFactory(
 
     input.outlet
       .transform[ByteString](() => new LogNetworkPackets(conn, "RCVD", Logging.DebugLevel))
-      .transform[MqttFrame](() => new FrameDecoderStage)
-      .transform[MqttPacket](() => new DecoderStage)
+      .transform[MqttFrame](() => new FrameDecoderStage(conn))
+      .transform[MqttPacket](() => new DecoderStage(conn))
+      .transform[MqttPacket](() => new DecodingErrorLogger(conn))
       .transform[MqttPacket](() => new LogMqttPackets(conn, "RCVD", Logging.DebugLevel))
       .~>(parellelPipeline)
       .transform[MqttPacket](() => new LogMqttPackets(conn, "SEND", Logging.DebugLevel))
-      .transform[ByteString](() => new EncoderStage)
+      .transform[ByteString](() => new EncoderStage(conn))
       .transform[ByteString](() => new LogNetworkPackets(conn, "SEND", Logging.DebugLevel))
       .~>(output.inlet)
 
@@ -69,30 +72,35 @@ class DefaultMqttConnectionFactory(
 
       val packetRouter: PacketRouting = new PacketRouting
       val fanOut = builder.add(packetRouter)
-      val fanIn = builder.add(Merge[MqttPacket](2))
+      val fanIn = builder.add(Merge[MqttPacket](3))
 
       fanOut.out0
         .transform(() => new ConnectHandler(conn, authenticationPlugin))
         .~>(fanIn.in(0))
 
       fanOut.out1
+        .transform(() => new PingReqHandler(conn))
         .~>(fanIn.in(1))
+
+      fanOut.out2
+        .~>(fanIn.in(2))
 
       (fanOut.in, fanIn.out)
     }
 }
 
 final class PacketRouting
-    extends FlexiRoute[MqttPacket, FanOutShape2[MqttPacket, Connect, MqttPacket]](
-      new FanOutShape2[MqttPacket, Connect, MqttPacket]("packetRouter"), OperationAttributes.name("packetRouter")
+    extends FlexiRoute[MqttPacket, FanOutShape3[MqttPacket, Connect, PingReq, MqttPacket]](
+      new FanOutShape3[MqttPacket, Connect, PingReq, MqttPacket]("packetRouter"), OperationAttributes.name("packetRouter")
     ) {
 
-  override def createRouteLogic(s: FanOutShape2[MqttPacket, Connect, MqttPacket]): RouteLogic[MqttPacket] = new RouteLogic[MqttPacket] {
+  override def createRouteLogic(s: FanOutShape3[MqttPacket, Connect, PingReq, MqttPacket]): RouteLogic[MqttPacket] = new RouteLogic[MqttPacket] {
     override def initialState: State[_] = State[Any](DemandFromAll(s)) {
       (ctx, _, packet) =>
         packet match {
           case p: Connect    => ctx.emit[Connect](s.out0)(p)
-          case p: MqttPacket => ctx.emit[MqttPacket](s.out1)(p)
+          case p: PingReq    => ctx.emit[PingReq](s.out1)(p)
+          case p: MqttPacket => ctx.emit[MqttPacket](s.out2)(p)
         }
 
         SameState

@@ -14,28 +14,28 @@
  * limitations under the License.
  */
 
-package io.wallee.connection.monitor
+package io.wallee.connection.error
 
 import akka.actor.ActorSystem
-import akka.event.Logging
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
+import akka.stream.stage.{ Context, PushStage, SyncDirective, TerminationDirective }
 import io.wallee.protocol.MqttPacket
 import io.wallee.shared.logging.TcpConnectionLogging
 
-/** [[PushStage]] for logging incoming/outgoing [[MqttPacket]]s.
+/** [[PushStage]] for logging decoding errors.
  *
- *  @param logPrefix Prefix to prepend to each log message, typically one of "RCVD" and "SEND"
- *  @param level Log level to use when logging network packets
+ *  @param connection [[Tcp.IncomingConnection connection]] this [[PushStage stage]] is attached to
+ *  @param system [[ActorSystem]] we are part of
  */
-final class LogMqttPackets(
-  protected[this] val connection: Tcp.IncomingConnection,
-  logPrefix:                      String, level: Logging.LogLevel
-)(protected[this] implicit val system: ActorSystem)
+class DecodingErrorLogger(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
     extends PushStage[MqttPacket, MqttPacket] with TcpConnectionLogging {
 
   override def onPush(elem: MqttPacket, ctx: Context[MqttPacket]): SyncDirective = {
-    log.log(level, s"$logPrefix: $elem")
     ctx.push(elem)
+  }
+
+  override def onUpstreamFailure(cause: Throwable, ctx: Context[MqttPacket]): TerminationDirective = {
+    log.error(cause, s"Error in decoder stage: ${cause.getMessage}")
+    super.onUpstreamFailure(cause, ctx)
   }
 }

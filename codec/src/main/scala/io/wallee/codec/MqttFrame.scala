@@ -56,4 +56,6 @@ final class MqttFrame(private val typeAndFlags: Byte, val variableHeaderPlusPayl
   override def hashCode(): Int = {
     31 * typeAndFlags.hashCode() + variableHeaderPlusPayload.hashCode()
   }
+
+  override def toString: String = s"MqttFrame(typeAndFlags=$typeAndFlags, variableHeaderPlusPayload=$variableHeaderPlusPayload)"
 }

@@ -16,25 +16,30 @@
 
 package io.wallee.codec
 
+import java.net.InetSocketAddress
+
 import akka.actor.ActorSystem
 import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{ Flow, Source, Tcp }
 import akka.stream.testkit.scaladsl.TestSink
-import akka.util.{ ByteStringBuilder, CompactByteString }
+import akka.util.{ ByteString, ByteStringBuilder, CompactByteString }
 import io.wallee.protocol.MalformedMqttPacketException
 import org.scalatest.{ FlatSpec, Matchers }
 
 class FrameDecoderStageSpec extends FlatSpec with Matchers {
 
   implicit val as = ActorSystem()
+
   implicit val fm = ActorFlowMaterializer()
+
+  val connection = Tcp.IncomingConnection(new InetSocketAddress(111), new InetSocketAddress(222), Flow[ByteString])
 
   "A new FrameDecoderStage when given a single serialized packet in a single chunk as input" should "correctly decode that frame" in {
     val chunk = CompactByteString(0x10, 0x04, 0x01, 0x01, 0x01, 0x01)
     val expectedDecodedFrame = new MqttFrame(0x10, chunk.drop(2))
 
     Source.single(chunk)
-      .transform(() => new FrameDecoderStage)
+      .transform(() => new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
@@ -47,7 +52,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedDecodedFrame = new MqttFrame(0x21, CompactByteString(0x01, 0x02, 0x03, 0x04))
 
     Source(List(firstChunk, secondChunk))
-      .transform(() => new FrameDecoderStage)
+      .transform(() => new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
@@ -61,7 +66,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedDecodedFrame = new MqttFrame(0x31, CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05, 0x06))
 
     Source(List(firstChunk, secondChunk, thirdChunk))
-      .transform(() => new FrameDecoderStage)
+      .transform(() => new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
@@ -76,7 +81,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedSecondDecodedFrame = new MqttFrame(0x21, CompactByteString(0x01, 0x02, 0x03))
 
     Source(List(firstChunk, secondChunk, thirdChunk))
-      .transform(() => new FrameDecoderStage)
+      .transform(() => new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(2)
       .expectNext(expectedFirstDecodedFrame, expectedSecondDecodedFrame)
@@ -107,7 +112,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedThirdDecodedFrame = new MqttFrame(0x31, thirdFramePayload)
 
     Source(List(firstChunk, secondChunk, thirdChunk, fourthChunk, fifthChunk))
-      .transform(() => new FrameDecoderStage)
+      .transform(() => new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(3)
       .expectNext(expectedFirstDecodedFrame, expectedSecondDecodedFrame, expectedThirdDecodedFrame)
@@ -121,11 +126,54 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
       val thirdChunk = CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05)
 
       val error = Source(List(firstChunk, secondChunk, thirdChunk))
-        .transform(() => new FrameDecoderStage)
+        .transform(() => new FrameDecoderStage(connection))
         .runWith(TestSink.probe[MqttFrame])
         .request(1)
         .expectError()
 
       assert(error.isInstanceOf[MalformedMqttPacketException])
     }
+
+  "A new FrameDecoderStage when given a serialized CONNECT followed by a PINGREQ as input" should "correctly decode two frames" in {
+    val connectTypeAndFlags: Int = 0x01 << 4
+    val connectPayload = CompactByteString(
+      0, // Length MSB (0)
+      4, // Length LSB (4)
+      'M', 'Q', 'T', 'T',
+      4, // Protocol level 4
+      206, // connect flags 11001110, will QoS = 01, cleanSession = true, willRetain = false
+      0, // Keep Alive MSB (0)
+      10, // Keep Alive LSB (10)
+      0, // Client ID MSB (0)
+      7, // Client ID LSB (7)
+      's', 'u', 'r', 'g', 'e', 'm', 'q',
+      0, // Will Topic MSB (0)
+      4, // Will Topic LSB (4)
+      'w', 'i', 'l', 'l',
+      0, // Will Message MSB (0)
+      12, // Will Message LSB (12)
+      's', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e',
+      0, // Username ID MSB (0)
+      7, // Username ID LSB (7)
+      's', 'u', 'r', 'g', 'e', 'm', 'q',
+      0, // Password ID MSB (0)
+      10, // Password ID LSB (10)
+      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't'
+    )
+    val firstChunk = CompactByteString(connectTypeAndFlags, 0x3C) ++ connectPayload
+
+    val pingReqTypeAndFlags: Int = 0x0C << 4
+    val secondChunk = CompactByteString(pingReqTypeAndFlags.toByte, 0x00)
+
+    val expectedDecodedConnectFrame = new MqttFrame(connectTypeAndFlags.toByte, connectPayload)
+    val expectedDecodedPingReqFrame = new MqttFrame(pingReqTypeAndFlags.toByte, ByteString.empty)
+
+    Source(List(firstChunk, secondChunk))
+      .log("frame")
+      .transform(() => new FrameDecoderStage(connection))
+      .runWith(TestSink.probe[MqttFrame])
+      .request(2)
+      .expectNext(expectedDecodedConnectFrame, expectedDecodedPingReqFrame)
+      .expectComplete()
+  }
 }

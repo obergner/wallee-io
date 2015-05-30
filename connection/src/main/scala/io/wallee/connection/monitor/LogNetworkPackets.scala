@@ -21,8 +21,8 @@ import akka.event.Logging
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage.{ Context, PushStage, SyncDirective, TerminationDirective }
 import akka.util.ByteString
-import io.wallee.connection.logging.TcpConnectionLogging
 import io.wallee.shared._
+import io.wallee.shared.logging.TcpConnectionLogging
 
 /** [[PushStage]] for logging incoming/outgoing network packets as HEX strings.
  *

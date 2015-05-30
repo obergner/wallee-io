@@ -16,18 +16,25 @@
 
 package io.wallee.codec
 
+import akka.actor.ActorSystem
+import akka.stream.scaladsl.Tcp
 import akka.stream.stage.{ Context, PushStage, SyncDirective }
 import akka.util.ByteString
 import io.wallee.protocol.MqttPacket
+import io.wallee.shared.logging.TcpConnectionLogging
 
 import scala.util.{ Failure, Success }
 
 /** Flow stage for encoding [[MqttPacket]]s.
  */
-class EncoderStage extends PushStage[MqttPacket, ByteString] {
+class EncoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
+    extends PushStage[MqttPacket, ByteString] with TcpConnectionLogging {
 
   override def onPush(elem: MqttPacket, ctx: Context[ByteString]): SyncDirective = {
-    MqttPacketEncoder.encode(elem) match {
+    log.debug(s"ENCODE:  $elem ...")
+    val encodedPacket = MqttPacketEncoder.encode(elem)
+    log.debug(s"ENCODED: $elem -> $encodedPacket")
+    encodedPacket match {
       case Success(buffer) => ctx.push(buffer)
       case Failure(ex)     => ctx.fail(ex)
     }

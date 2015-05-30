@@ -19,8 +19,8 @@ package io.wallee.connection.auth
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage.{ Context, PushStage, SyncDirective }
-import io.wallee.connection.logging.TcpConnectionLogging
 import io.wallee.protocol.{ Connack, Connect, ConnectReturnCode }
+import io.wallee.shared.logging.TcpConnectionLogging
 import io.wallee.spi.auth.{ AuthenticationPlugin, Credentials }
 
 /** A [[PushStage]] for handling [[Connect]] packets, i.e. authenticating clients.

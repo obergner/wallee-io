@@ -16,9 +16,12 @@
 
 package io.wallee.codec
 
+import akka.actor.ActorSystem
+import akka.stream.scaladsl.Tcp
 import akka.stream.stage.{ Context, PushPullStage, SyncDirective }
 import akka.util.ByteString
 import io.wallee.protocol.MalformedMqttPacketException
+import io.wallee.shared.logging.TcpConnectionLogging
 
 import scala.util.control.Breaks._
 
@@ -27,7 +30,8 @@ import scala.util.control.Breaks._
  *  ATTENTION: This class is stateful and NOT thread safe.
  */
 @SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
-class FrameDecoderStage extends PushPullStage[ByteString, MqttFrame] {
+class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
+    extends PushPullStage[ByteString, MqttFrame] with TcpConnectionLogging {
 
   import FrameDecoderStage._
 
@@ -44,6 +48,7 @@ class FrameDecoderStage extends PushPullStage[ByteString, MqttFrame] {
 
   override def onPush(elem: ByteString, ctx: Context[MqttFrame]): SyncDirective = {
     buffer ++= elem
+    log.debug(s"DECODE FRAME: $elem (cached:$buffer)")
     emitFrameOrPull(ctx)
   }
 
@@ -64,10 +69,11 @@ class FrameDecoderStage extends PushPullStage[ByteString, MqttFrame] {
       currentState match {
         case MqttFrameDecoded(_, frame) =>
           currentState = NoDataConsumed(bufferAccess)
+          log.debug(s"DECODED FRAME: $frame")
           ctx.push(frame)
         case IllegalRemainingLength(_) =>
           currentState = NoDataConsumed(bufferAccess)
-          ctx.fail(new MalformedMqttPacketException("Illegal remaining length field in MQTT packet")) // FIXME: We should rather close this playground
+          ctx.fail(new MalformedMqttPacketException("Illegal remaining length field in MQTT packet"))
         case _ => ctx.pull()
       }
     }
@@ -119,6 +125,9 @@ object FrameDecoderStage {
         case Left(state) if state == RemainingLengthDecoder.MaxRemainingLengthExceeded =>
           buffer(ByteString.empty) // This is potentially dangerous: we don't know exactly whether it's safe to throw away all bytes
           IllegalRemainingLength(buffer)
+        case Right(RemainingLengthDecoder.Result(remainingLength, remainder)) if remainder.isEmpty => // Packet has no payload, e.g. PINGREQ
+          buffer(remainder)
+          MqttFrameDecoded(buffer, new MqttFrame(firstHeaderByte, remainder))
         case Right(RemainingLengthDecoder.Result(remainingLength, remainder)) =>
           buffer(remainder)
           ConsumingVariableHeaderAndPayload(buffer, firstHeaderByte, remainingLength)
