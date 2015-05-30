@@ -17,7 +17,7 @@
 package io.wallee.codec
 
 import akka.util.CompactByteString
-import io.wallee.protocol.MalformedMqttPacketException
+import io.wallee.protocol.{ MalformedMqttPacketException, QoS }
 import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.util.{ Failure, Success }
@@ -117,5 +117,53 @@ class MqttPacketEncoderSpec extends FlatSpec with Matchers {
       case Success(actualResult) => assert(actualResult == expectedResult)
       case Failure(ex)           => fail("Should not have reported an error for legal input")
     }
+  }
+
+  "MqttPacketEncoder#encodeQoSInto when given QoS AtMostOnce" should "correctly encode it" in {
+    val qos = QoS.AtMostOnce
+    val target = 0xFD // 11111101
+    val leftShift = 2
+
+    val expectedResult = 0xF1 // 11110001
+
+    val actualResult = MqttPacketEncoder.encodeQoSInto(qos, target, leftShift)
+
+    assert(actualResult == expectedResult)
+  }
+
+  "MqttPacketEncoder#encodeQoSInto when given QoS AtLeastOnce" should "correctly encode it" in {
+    val qos = QoS.AtLeastOnce
+    val target = 0xFF // 11111111
+    val leftShift = 3
+
+    val expectedResult = 0xEF // 11101111
+
+    val actualResult = MqttPacketEncoder.encodeQoSInto(qos, target, leftShift)
+
+    assert(actualResult == expectedResult)
+  }
+
+  "MqttPacketEncoder#encodeQoSInto when given QoS ExactlyOnce" should "correctly encode it" in {
+    val qos = QoS.ExactlyOnce
+    val target = 0xA5 // 10100101
+    val leftShift = 5
+
+    val expectedResult = 0xC5 // 11000101
+
+    val actualResult = MqttPacketEncoder.encodeQoSInto(qos, target, leftShift)
+
+    assert(actualResult == expectedResult)
+  }
+
+  "MqttPacketEncoder#encodeQoSInto when given QoS Reserved" should "correctly encode it" in {
+    val qos = QoS.Reserved
+    val target = 0xA5 // 10100101
+    val leftShift = 4
+
+    val expectedResult = 0xB5 // 10110101
+
+    val actualResult = MqttPacketEncoder.encodeQoSInto(qos, target, leftShift)
+
+    assert(actualResult == expectedResult)
   }
 }

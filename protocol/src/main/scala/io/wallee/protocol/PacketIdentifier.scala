@@ -20,4 +20,11 @@ package io.wallee.protocol
  *
  *  @see [[http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718025]]
  */
-final case class PacketIdentifier(id: Int)
+final case class PacketIdentifier(id: Int) {
+  require(id <= PacketIdentifier.MaxPacketIdentifier, s"Packet identifier must be <= ${PacketIdentifier.MaxPacketIdentifier}: $id")
+}
+
+object PacketIdentifier {
+
+  protected[protocol] val MaxPacketIdentifier: Int = 65535
+}

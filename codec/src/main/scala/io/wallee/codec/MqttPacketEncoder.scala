@@ -19,7 +19,7 @@ package io.wallee.codec
 import java.nio.charset.Charset
 
 import akka.util.{ ByteString, CompactByteString }
-import io.wallee.protocol.{ Connack, MalformedMqttPacketException, MqttPacket, PingResp }
+import io.wallee.protocol._
 
 import scala.util.{ Failure, Success, Try }
 
@@ -39,9 +39,10 @@ object MqttPacketEncoder {
    *  @return Encoded `packet`, or failure
    */
   def encode[P <: MqttPacket](packet: P): Try[ByteString] = packet match {
-    case p @ Connack(_, _) => ConnackEncoder.encode(p)
-    case p @ PingResp()    => PingRespEncoder.encode(p)
-    case _                 => Failure(new IllegalArgumentException(s"Unsupported MQTT packet: $packet"))
+    case p: Connack  => ConnackEncoder.encode(p)
+    case p: Publish  => PublishEncoder.encode(p)
+    case p: PingResp => PingRespEncoder.encode(p)
+    case _           => Failure(new IllegalArgumentException(s"Unsupported MQTT packet: $packet"))
   }
 
   protected[codec] val MaxUint16: Int = scala.math.pow(2, 16).floor.toInt
@@ -82,5 +83,16 @@ object MqttPacketEncoder {
       val encodedThisDigit = if (restRemainingLength > 0) thisDigit + 0x80 else thisDigit
       doEncodeRemainingLength(restRemainingLength, buffer ++ CompactByteString(encodedThisDigit))
     }
+  }
+
+  protected[codec] def encodeQoSInto(qos: QoS, target: Int, leftShift: Int): Int = {
+    val stanceMask: Int = ~(0x03 << leftShift)
+    val mask: Int = qos match {
+      case QoS.AtMostOnce  => 0x00 << leftShift
+      case QoS.AtLeastOnce => 0x01 << leftShift
+      case QoS.ExactlyOnce => 0x02 << leftShift
+      case QoS.Reserved    => 0x03 << leftShift
+    }
+    (target & stanceMask) | mask
   }
 }
