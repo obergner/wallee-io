@@ -26,7 +26,7 @@ import akka.util.ByteString
  *  Finally, an `MqttFrame`'s `variableHeaderPlusPayload` property returns a `ByteString` containing variable header (if
  *  present) and payload in serialized form.
  *
- *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718020
+ *  @see [[http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718020]]
  */
 final class MqttFrame(private val typeAndFlags: Byte, val variableHeaderPlusPayload: ByteString) {
   require(

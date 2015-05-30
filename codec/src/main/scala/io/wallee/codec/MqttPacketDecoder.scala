@@ -17,7 +17,7 @@
 package io.wallee.codec
 
 import akka.util.ByteString
-import io.wallee.protocol.{ MalformedMqttPacketException, MqttPacket }
+import io.wallee.protocol.{ MalformedMqttPacketException, MqttPacket, QoS }
 
 import scala.util.{ Failure, Success, Try }
 
@@ -45,6 +45,14 @@ abstract class MqttPacketDecoder[+P <: MqttPacket](packetType: Byte) {
 
 object MqttPacketDecoder {
 
+  val QoSMask: Int = 0x03
+
+  val AtMostOnceVal: Int = 0x00
+
+  val AtLeastOnceVal: Int = 0x01
+
+  val ExactlyOnceVal: Int = 0x02
+
   /** Decode `frame` into an [[MqttPacket]].
    *
    *  @param frame [[MqttFrame]] to decode
@@ -52,6 +60,7 @@ object MqttPacketDecoder {
    */
   def decode(frame: MqttFrame): Try[MqttPacket] = frame.packetType match {
     case PacketType.Connect => ConnectDecoder.decode(frame)
+    case PacketType.Publish => PublishDecoder.decode(frame)
     case PacketType.Pingreq => PingReqDecoder.decode(frame)
     case _                  => Failure(new IllegalArgumentException(s"Unsupported packet type: ${frame.packetType}"))
   }
@@ -77,5 +86,12 @@ object MqttPacketDecoder {
           Success((string.utf8String, rest))
         }
     }
+  }
+
+  protected[codec] def decodeQoS(encoded: Int): QoS = encoded & QoSMask match {
+    case AtMostOnceVal  => QoS.AtMostOnce
+    case AtLeastOnceVal => QoS.AtLeastOnce
+    case ExactlyOnceVal => QoS.ExactlyOnce
+    case _              => QoS.Reserved
   }
 }

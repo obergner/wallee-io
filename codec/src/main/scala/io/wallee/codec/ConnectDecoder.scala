@@ -150,12 +150,6 @@ protected[codec] object VariableConnectHeader {
 
   private val CleanSessionFlag: Int = 0x02
 
-  private val AtMostOncePat: Int = 0x00
-
-  private val AtLeastOncePat: Int = 0x01
-
-  private val ExactlyOncePat: Int = 0x02
-
   def decode(buffer: ByteString): Try[(VariableConnectHeader, ByteString)] = {
     decodeUtf8String(buffer).flatMap[(VariableConnectHeader, ByteString)] {
       case (protocolName, restBuffer) =>
@@ -173,12 +167,7 @@ protected[codec] object VariableConnectHeader {
     val password = (restBuffer(1) & PasswordFlag) == PasswordFlag
     val willRetain = (restBuffer(1) & WillRetainFlag) == WillRetainFlag
     val willQoSByte = (restBuffer(1) & WillQoSMask) >> WillQoSLeftShift
-    val willQoS = willQoSByte match {
-      case AtMostOncePat  => QoS.AtMostOnce
-      case AtLeastOncePat => QoS.AtLeastOnce
-      case ExactlyOncePat => QoS.ExactlyOnce
-      case _              => QoS.Reserved
-    }
+    val willQoS = decodeQoS(willQoSByte)
     val willFlag = (restBuffer(1) & WillFlagFlag) == WillFlagFlag
     val cleanSession = (restBuffer(1) & CleanSessionFlag) == CleanSessionFlag
     decodeUint16(restBuffer.drop(2)) match {

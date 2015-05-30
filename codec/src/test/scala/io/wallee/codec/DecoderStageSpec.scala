@@ -73,7 +73,37 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       .expectComplete()
   }
 
-  "PingReqDecoder when processing a well-formed MqttFrame of type PINGREQ" should "transform it into a PingReq packet" in {
+  "DecoderStage when given a well-formed MqttFrame of type PUBLISH" should "correctly decode its contents" in {
+    // A telltale case of unabashed robbery: https://github.com/surgemq/surgemq/blob/master/message/publish_test.go
+    val typeAndFlags: Int = 0x3D
+    val variableHeaderPlusPayload = CompactByteString(
+      0, // topic name MSB (0)
+      7, // topic name LSB (7)
+      's', 'u', 'r', 'g', 'e', 'm', 'q',
+      0, // packet ID MSB (0)
+      7, // packet ID LSB (7)
+      's', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e'
+    )
+    val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
+
+    val expectedResult = Publish(
+      dup = true,
+      QoS.ExactlyOnce,
+      retain = true,
+      Topic("surgemq"),
+      PacketIdentifier(7),
+      CompactByteString('s', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e')
+    )
+
+    Source.single[MqttFrame](frame)
+      .transform(() => new DecoderStage(connection))
+      .runWith(TestSink.probe[MqttPacket])
+      .request(1)
+      .expectNext(expectedResult)
+      .expectComplete()
+  }
+
+  "DecoderStage when processing a well-formed MqttFrame of type PINGREQ" should "transform it into a PingReq packet" in {
     val typeAndFlags: Int = 0xC0
     val variableHeaderPlusPayload = ByteString.empty
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
