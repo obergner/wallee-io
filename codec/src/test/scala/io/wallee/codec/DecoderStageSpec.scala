@@ -103,6 +103,21 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       .expectComplete()
   }
 
+  "DecoderStage when processing a well-formed MqttFrame of type PUBACK" should "transform it into a Puback packet" in {
+    val typeAndFlags: Int = 0x40
+    val variableHeaderPlusPayload = CompactByteString(0x01, 0x05)
+    val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
+
+    val expectedResult = Puback(PacketIdentifier(261))
+
+    Source.single[MqttFrame](frame)
+      .transform(() => new DecoderStage(connection))
+      .runWith(TestSink.probe[MqttPacket])
+      .request(1)
+      .expectNext(expectedResult)
+      .expectComplete()
+  }
+
   "DecoderStage when processing a well-formed MqttFrame of type PINGREQ" should "transform it into a PingReq packet" in {
     val typeAndFlags: Int = 0xC0
     val variableHeaderPlusPayload = ByteString.empty

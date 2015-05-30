@@ -41,6 +41,7 @@ object MqttPacketEncoder {
   def encode[P <: MqttPacket](packet: P): Try[ByteString] = packet match {
     case p: Connack  => ConnackEncoder.encode(p)
     case p: Publish  => PublishEncoder.encode(p)
+    case p: Puback   => PubackEncoder.encode(p)
     case p: PingResp => PingRespEncoder.encode(p)
     case _           => Failure(new IllegalArgumentException(s"Unsupported MQTT packet: $packet"))
   }

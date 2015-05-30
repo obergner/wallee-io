@@ -21,7 +21,7 @@ import akka.event.Logging
 import akka.stream.scaladsl.FlexiRoute.{ DemandFromAll, RouteLogic }
 import akka.stream.scaladsl._
 import akka.stream.stage.{ Context, PushStage, SyncDirective }
-import akka.stream.{ FanOutShape3, OperationAttributes }
+import akka.stream.{ FanOutShape4, FanOutShape3, OperationAttributes }
 import akka.util.ByteString
 import com.typesafe.config.Config
 import io.wallee.codec.{ DecoderStage, EncoderStage, FrameDecoderStage, MqttFrame }
@@ -30,7 +30,8 @@ import io.wallee.connection.auth.ConnectHandler
 import io.wallee.connection.error.DecodingErrorLogger
 import io.wallee.connection.monitor.{ LogMqttPackets, LogNetworkPackets }
 import io.wallee.connection.ping.PingReqHandler
-import io.wallee.protocol.{ Connect, MqttPacket, PingReq }
+import io.wallee.connection.publish.PublishHandler
+import io.wallee.protocol.{ Publish, Connect, MqttPacket, PingReq }
 import io.wallee.shared.logging.TcpConnectionLogging
 import io.wallee.spi.auth.AuthenticationPlugin
 
@@ -72,7 +73,7 @@ class DefaultMqttConnectionFactory(
 
       val packetRouter: PacketRouting = new PacketRouting
       val fanOut = builder.add(packetRouter)
-      val fanIn = builder.add(Merge[MqttPacket](3))
+      val fanIn = builder.add(Merge[MqttPacket](4))
 
       fanOut.out0
         .transform(() => new ConnectHandler(conn, authenticationPlugin))
@@ -83,24 +84,29 @@ class DefaultMqttConnectionFactory(
         .~>(fanIn.in(1))
 
       fanOut.out2
+        .transform(() => new PublishHandler(conn))
         .~>(fanIn.in(2))
+
+      fanOut.out3
+        .~>(fanIn.in(3))
 
       (fanOut.in, fanIn.out)
     }
 }
 
 final class PacketRouting
-    extends FlexiRoute[MqttPacket, FanOutShape3[MqttPacket, Connect, PingReq, MqttPacket]](
-      new FanOutShape3[MqttPacket, Connect, PingReq, MqttPacket]("packetRouter"), OperationAttributes.name("packetRouter")
+    extends FlexiRoute[MqttPacket, FanOutShape4[MqttPacket, Connect, PingReq, Publish, MqttPacket]](
+      new FanOutShape4[MqttPacket, Connect, PingReq, Publish, MqttPacket]("packetRouter"), OperationAttributes.name("packetRouter")
     ) {
 
-  override def createRouteLogic(s: FanOutShape3[MqttPacket, Connect, PingReq, MqttPacket]): RouteLogic[MqttPacket] = new RouteLogic[MqttPacket] {
+  override def createRouteLogic(s: FanOutShape4[MqttPacket, Connect, PingReq, Publish, MqttPacket]): RouteLogic[MqttPacket] = new RouteLogic[MqttPacket] {
     override def initialState: State[_] = State[Any](DemandFromAll(s)) {
       (ctx, _, packet) =>
         packet match {
           case p: Connect    => ctx.emit[Connect](s.out0)(p)
           case p: PingReq    => ctx.emit[PingReq](s.out1)(p)
-          case p: MqttPacket => ctx.emit[MqttPacket](s.out2)(p)
+          case p: Publish    => ctx.emit[Publish](s.out2)(p)
+          case p: MqttPacket => ctx.emit[MqttPacket](s.out3)(p)
         }
 
         SameState
