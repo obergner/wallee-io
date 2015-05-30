@@ -94,6 +94,18 @@ class EncoderStageSpec extends FlatSpec with Matchers {
       .expectComplete()
   }
 
+  "An EncoderStage when given a PUBCOMP packet as input" should "propagate correctly encoded packet" in {
+    val expectedResult = CompactByteString(0x70, 0x02, 0xA1, 0x3F)
+    val pingResp = Pubcomp(PacketIdentifier(41279))
+
+    Source.single[MqttPacket](pingResp)
+      .transform(() => new EncoderStage(connection))
+      .runWith(TestSink.probe[ByteString])
+      .request(1)
+      .expectNext(expectedResult)
+      .expectComplete()
+  }
+
   "An EncoderStage given a well-formed PINGRESP packet as input" should "propagate correctly encoded packet" in {
     val expectedResult = CompactByteString(0xD0, 0x00)
     val pingResp = PingResp()
