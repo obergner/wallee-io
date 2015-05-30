@@ -62,6 +62,8 @@ object MqttPacketDecoder {
     case PacketType.Connect => ConnectDecoder.decode(frame)
     case PacketType.Publish => PublishDecoder.decode(frame)
     case PacketType.Puback  => PubackDecoder.decode(frame)
+    case PacketType.Pubrec  => PubrecDecoder.decode(frame)
+    case PacketType.Pubrel  => PubrelDecoder.decode(frame)
     case PacketType.Pingreq => PingReqDecoder.decode(frame)
     case _                  => Failure(new IllegalArgumentException(s"Unsupported packet type: ${frame.packetType}"))
   }
