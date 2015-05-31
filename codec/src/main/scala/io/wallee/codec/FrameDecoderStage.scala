@@ -47,8 +47,8 @@ class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(
   private[this] var currentState: DecodingState = NoDataConsumed(bufferAccess)
 
   override def onPush(elem: ByteString, ctx: Context[MqttFrame]): SyncDirective = {
-    buffer ++= elem
     log.debug(s"DECODE FRAME: $elem (cached:$buffer)")
+    buffer ++= elem
     emitFrameOrPull(ctx)
   }
 

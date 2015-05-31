@@ -20,19 +20,17 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.scaladsl.FlexiRoute.{ DemandFromAll, RouteLogic }
 import akka.stream.scaladsl._
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
-import akka.stream.{ FanOutShape4, FanOutShape3, OperationAttributes }
+import akka.stream.{ FanOutShape4, OperationAttributes }
 import akka.util.ByteString
 import com.typesafe.config.Config
 import io.wallee.codec.{ DecoderStage, EncoderStage, FrameDecoderStage, MqttFrame }
 import io.wallee.connection.MqttConnectionFactory
 import io.wallee.connection.auth.ConnectHandler
-import io.wallee.connection.error.DecodingErrorLogger
+import io.wallee.connection.error.{ ConnectionCloseHandler, DecodingErrorLogger }
 import io.wallee.connection.monitor.{ LogMqttPackets, LogNetworkPackets }
 import io.wallee.connection.ping.PingReqHandler
 import io.wallee.connection.publish.PublishHandler
-import io.wallee.protocol.{ Publish, Connect, MqttPacket, PingReq }
-import io.wallee.shared.logging.TcpConnectionLogging
+import io.wallee.protocol._
 import io.wallee.spi.auth.AuthenticationPlugin
 
 /**
@@ -62,6 +60,7 @@ class DefaultMqttConnectionFactory(
       .transform[MqttPacket](() => new LogMqttPackets(conn, "SEND", Logging.DebugLevel))
       .transform[ByteString](() => new EncoderStage(conn))
       .transform[ByteString](() => new LogNetworkPackets(conn, "SEND", Logging.DebugLevel))
+      .transform[ByteString](() => new ConnectionCloseHandler(conn))
       .~>(output.inlet)
 
     (input.inlet, output.outlet)
@@ -111,15 +110,5 @@ final class PacketRouting
 
         SameState
     }
-  }
-}
-
-final class ConnectionClose(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends PushStage[MqttPacket, MqttPacket] with TcpConnectionLogging {
-
-  override def onPush(elem: MqttPacket, ctx: Context[MqttPacket]): SyncDirective = {
-    log.warning(s"Closing connetion to remote client [${connection.remoteAddress} ...")
-    log.warning(s"Connetion to remote client [${connection.remoteAddress} closed")
-    ctx.push(elem)
   }
 }

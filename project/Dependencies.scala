@@ -3,7 +3,7 @@ import sbt._
 object Version {
   val akka                 = "2.3.11"
   val akkaLog4j            = "0.2.0"
-  val akkaStreams          = "1.0-RC2"
+  val akkaStreams          = "1.0-RC3"
   val log4j                = "2.3"
   val scala                = "2.11.6"
   val metricsScala         = "3.5.1_a2.3"
