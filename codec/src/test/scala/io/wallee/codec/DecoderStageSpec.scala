@@ -148,12 +148,43 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       .expectComplete()
   }
 
-  "DecoderStage when processing a well-formed MqttFrame of type PUBCOMP" should "transform it into a Pubrel packet" in {
+  "DecoderStage when processing a well-formed MqttFrame of type PUBCOMP" should "transform it into a Pubcomp packet" in {
     val typeAndFlags: Int = 0x70
     val variableHeaderPlusPayload = CompactByteString(0xA1, 0x3F)
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val expectedResult = Pubcomp(PacketIdentifier(41279))
+
+    Source.single[MqttFrame](frame)
+      .transform(() => new DecoderStage(connection))
+      .runWith(TestSink.probe[MqttPacket])
+      .request(1)
+      .expectNext(expectedResult)
+      .expectComplete()
+  }
+
+  "DecoderStage when processing a well-formed MqttFrame of type SUBSCRIBE" should "transform it into a Subscribe packet" in {
+    // A telltale case of unabashed robbery: https://github.com/surgemq/surgemq/blob/master/message/connect_test.go
+    val typeAndFlags: Int = 0x82
+    val variableHeaderPlusPayload = CompactByteString(
+      0, // packet ID MSB (0)
+      7, // packet ID LSB (7)
+      0, // topic name MSB (0)
+      7, // topic name LSB (7)
+      's', 'u', 'r', 'g', 'e', 'm', 'q',
+      0, // QoS
+      0, // topic name MSB (0)
+      8, // topic name LSB (8)
+      '/', 'a', '/', 'b', '/', '#', '/', 'c',
+      1, // QoS
+      0, // topic name MSB (0)
+      10, // topic name LSB (10)
+      '/', 'a', '/', 'b', '/', '#', '/', 'c', 'd', 'd',
+      2 // QoS
+    )
+    val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
+
+    val expectedResult = Subscribe(PacketIdentifier(7), List[Subscription](Subscription("surgemq", QoS.AtMostOnce), Subscription("/a/b/#/c", QoS.AtLeastOnce), Subscription("/a/b/#/cdd", QoS.ExactlyOnce)))
 
     Source.single[MqttFrame](frame)
       .transform(() => new DecoderStage(connection))

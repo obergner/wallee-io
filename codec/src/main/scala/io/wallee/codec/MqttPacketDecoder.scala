@@ -59,14 +59,15 @@ object MqttPacketDecoder {
    *  @return Decoded [[MqttPacket]], or failure
    */
   def decode(frame: MqttFrame): Try[MqttPacket] = frame.packetType match {
-    case PacketType.Connect => ConnectDecoder.decode(frame)
-    case PacketType.Publish => PublishDecoder.decode(frame)
-    case PacketType.Puback  => PubackDecoder.decode(frame)
-    case PacketType.Pubrec  => PubrecDecoder.decode(frame)
-    case PacketType.Pubrel  => PubrelDecoder.decode(frame)
-    case PacketType.Pubcomp => PubcompDecoder.decode(frame)
-    case PacketType.Pingreq => PingReqDecoder.decode(frame)
-    case _                  => Failure(new IllegalArgumentException(s"Unsupported packet type: ${frame.packetType}"))
+    case PacketType.Connect   => ConnectDecoder.decode(frame)
+    case PacketType.Publish   => PublishDecoder.decode(frame)
+    case PacketType.Puback    => PubackDecoder.decode(frame)
+    case PacketType.Pubrec    => PubrecDecoder.decode(frame)
+    case PacketType.Pubrel    => PubrelDecoder.decode(frame)
+    case PacketType.Pubcomp   => PubcompDecoder.decode(frame)
+    case PacketType.Subscribe => SubscribeDecoder.decode(frame)
+    case PacketType.Pingreq   => PingReqDecoder.decode(frame)
+    case _                    => Failure(new IllegalArgumentException(s"Unsupported packet type: ${frame.packetType}"))
   }
 
   protected[codec] def decodeUint16(payload: ByteString): Try[(Int, ByteString)] = {
