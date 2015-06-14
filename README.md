@@ -1,7 +1,7 @@
 # Wallee IO
 
-A fledgling MQTT 3.1.1 server written in Scala, using the upcoming [akka
-streams](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-RC3/scala.html?_ga=1.213223377.452692600.1432054632)
+A fledgling [MQTT 3.1.1](http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html) server written in Scala,
+using the upcoming [akka streams](http://doc.akka.io/docs/akka-stream-and-http-experimental/1.0-RC3/scala.html?_ga=1.213223377.452692600.1432054632)
 package for implementing the IO layer.
 
 ## Motivation
