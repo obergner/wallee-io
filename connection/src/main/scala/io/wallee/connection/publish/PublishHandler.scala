@@ -18,8 +18,9 @@ package io.wallee.connection.publish
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
-import io.wallee.protocol.{ Puback, Publish }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import io.wallee.protocol.{Puback, Publish}
 import io.wallee.shared.logging.TcpConnectionLogging
 
 /** Handle [[Publish]] messages.
@@ -27,11 +28,32 @@ import io.wallee.shared.logging.TcpConnectionLogging
  *  @todo Implementation needed
  */
 class PublishHandler(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends PushStage[Publish, Puback] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[Publish, Puback]] with TcpConnectionLogging {
 
-  override def onPush(elem: Publish, ctx: Context[Puback]): SyncDirective = {
-    log.debug(s"PUBLISH:   $elem ...")
-    log.info(s"PUBLISHED: $elem - confirmation pending")
-    ctx.push(Puback(elem.packetId))
-  }
+  val in = Inlet[Publish]("PublishHandler.in")
+
+  val out = Outlet[Puback]("PupblishHandler.out")
+
+  override def shape: FlowShape[Publish, Puback] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
+
+      setHandler(in, new InHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPush(): Unit = {
+          val elem = grab(in)
+          log.debug(s"PUBLISH:   $elem ...")
+          log.info(s"PUBLISHED: $elem - confirmation pending")
+          push(out, Puback(elem.packetId))
+        }
+      })
+
+      setHandler(out, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(in)
+        }
+      })
+    }
 }

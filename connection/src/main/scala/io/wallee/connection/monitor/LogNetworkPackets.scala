@@ -19,34 +19,51 @@ package io.wallee.connection.monitor
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective, TerminationDirective }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import akka.util.ByteString
 import io.wallee.shared._
 import io.wallee.shared.logging.TcpConnectionLogging
 
-/** [[PushStage]] for logging incoming/outgoing network packets as HEX strings.
+/** [[GraphStage]] for logging incoming/outgoing network packets as HEX strings.
  *
  *  @param logPrefix Prefix to prepend to each log message, typically one of "RCVD" and "SEND"
- *  @param level Log level to use when logging network packets
+  * @param level     Log level to use when logging network packets
  */
 final class LogNetworkPackets(
   protected[this] val connection: Tcp.IncomingConnection,
   logPrefix:                      String, level: Logging.LogLevel
 )(protected[this] implicit val system: ActorSystem)
-    extends PushStage[ByteString, ByteString] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[ByteString, ByteString]] with TcpConnectionLogging {
 
-  override def onPush(elem: ByteString, ctx: Context[ByteString]): SyncDirective = {
-    log.log(level, s"$logPrefix: ${byteStringToHex(elem)} (HEX)")
-    ctx.push(elem)
-  }
+  val in = Inlet[ByteString]("LogNetworkPackets.in")
 
-  override def onUpstreamFinish(ctx: Context[ByteString]): TerminationDirective = {
-    log.info(s"Upstream finished")
-    super.onUpstreamFinish(ctx)
-  }
+  val out = Outlet[ByteString]("LogNetworkPackets.out")
 
-  override def onUpstreamFailure(cause: Throwable, ctx: Context[ByteString]): TerminationDirective = {
-    log.error(cause, s"Upstream failed: ${cause.getMessage}")
-    super.onUpstreamFailure(cause, ctx)
-  }
+  override def shape: FlowShape[ByteString, ByteString] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
+
+      setHandler(in, new InHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPush(): Unit = {
+          val elem = grab(in)
+          log.log(level, s"$logPrefix: ${byteStringToHex(elem)} (HEX)")
+          push(out, elem)
+        }
+      })
+
+      setHandler(out, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(in)
+        }
+      })
+    }
+}
+
+object LogNetworkPackets {
+
+  def apply(connection: Tcp.IncomingConnection, logPrefix: String, level: Logging.LogLevel)(implicit system: ActorSystem): LogNetworkPackets = new LogNetworkPackets(connection, logPrefix, level)(system)
 }

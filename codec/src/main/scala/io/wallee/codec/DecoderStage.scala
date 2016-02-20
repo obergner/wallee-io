@@ -18,24 +18,48 @@ package io.wallee.codec
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import io.wallee.protocol.MqttPacket
 import io.wallee.shared.logging.TcpConnectionLogging
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /** Transform [[MqttFrame]]s into [[MqttPacket]]s.
  */
 final class DecoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends PushStage[MqttFrame, MqttPacket] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[MqttFrame, MqttPacket]] with TcpConnectionLogging {
 
-  override def onPush(elem: MqttFrame, ctx: Context[MqttPacket]): SyncDirective = {
-    log.debug(s"DECODE:  $elem ...")
-    val decodedPacket = MqttPacketDecoder.decode(elem)
-    log.debug(s"DECODED: $elem -> $decodedPacket")
-    decodedPacket match {
-      case Success(packet) => ctx.push(packet)
-      case Failure(ex)     => ctx.fail(ex)
+  val in = Inlet[MqttFrame]("DecoderStage.in")
+
+  val out = Outlet[MqttPacket]("DecoderStage.out")
+
+  override def shape: FlowShape[MqttFrame, MqttPacket] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
+
+      setHandler(in, new InHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPush(): Unit = {
+          val elem = grab(in)
+          log.debug(s"DECODE:  $elem ...")
+          val decodedPacket = MqttPacketDecoder.decode(elem)
+          log.debug(s"DECODED: $elem -> $decodedPacket")
+          decodedPacket match {
+            case Success(packet) => push(out, packet)
+            case Failure(ex) =>
+              log.error(ex, s"Failed to decode MQTT frame: ${ex.getMessage}")
+              fail(out, ex)
+          }
+        }
+      })
+
+      setHandler(out, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(in)
+        }
+      })
     }
-  }
 }

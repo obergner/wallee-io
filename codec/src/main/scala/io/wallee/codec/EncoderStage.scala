@@ -18,25 +18,47 @@ package io.wallee.codec
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import akka.util.ByteString
 import io.wallee.protocol.MqttPacket
 import io.wallee.shared.logging.TcpConnectionLogging
 
-import scala.util.{ Failure, Success }
+import scala.util.{Failure, Success}
 
 /** Flow stage for encoding [[MqttPacket]]s.
  */
 class EncoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends PushStage[MqttPacket, ByteString] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[MqttPacket, ByteString]] with TcpConnectionLogging {
 
-  override def onPush(elem: MqttPacket, ctx: Context[ByteString]): SyncDirective = {
-    log.debug(s"ENCODE:  $elem ...")
-    val encodedPacket = MqttPacketEncoder.encode(elem)
-    log.debug(s"ENCODED: $elem -> $encodedPacket")
-    encodedPacket match {
-      case Success(buffer) => ctx.push(buffer)
-      case Failure(ex)     => ctx.fail(ex)
+  val in = Inlet[MqttPacket]("EncoderStage.in")
+
+  val out = Outlet[ByteString]("EncoderStage.out")
+
+  override def shape: FlowShape[MqttPacket, ByteString] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
+
+      setHandler(in, new InHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPush(): Unit = {
+          val elem = grab(in)
+          log.debug(s"ENCODE:  $elem ...")
+          val encodedPacket = MqttPacketEncoder.encode(elem)
+          log.debug(s"ENCODED: $elem -> $encodedPacket")
+          encodedPacket match {
+            case Success(buffer) => push(out, buffer)
+            case Failure(ex) => fail(out, ex)
+          }
+        }
+      })
+
+      setHandler(out, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(in)
+        }
+      })
     }
-  }
 }

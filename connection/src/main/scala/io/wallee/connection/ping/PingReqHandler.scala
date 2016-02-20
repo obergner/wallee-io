@@ -18,17 +18,38 @@ package io.wallee.connection.ping
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import io.wallee.protocol._
 import io.wallee.shared.logging.TcpConnectionLogging
 
-/** A [[PushStage]] for handling [[PingReq]] packets, i.e. responding with a [[PingResp]].
+/** A [[GraphStage]] for handling [[PingReq]] packets, i.e. responding with a [[PingResp]].
  */
 class PingReqHandler(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends PushStage[PingReq, PingResp] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[PingReq, PingResp]] with TcpConnectionLogging {
 
-  override def onPush(elem: PingReq, ctx: Context[PingResp]): SyncDirective = {
-    log.debug(s"Received PingReq - sending PingResp")
-    ctx.push(PingResp())
-  }
+  val in = Inlet[PingReq]("PingReqHandler.in")
+
+  val out = Outlet[PingResp]("PingReqHandler.out")
+
+  override def shape: FlowShape[PingReq, PingResp] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
+
+      setHandler(in, new InHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPush(): Unit = {
+          log.debug(s"Received PingReq - sending PingResp")
+          push(out, PingResp())
+        }
+      })
+
+      setHandler(out, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(in)
+        }
+      })
+    }
 }

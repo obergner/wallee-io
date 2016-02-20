@@ -19,18 +19,18 @@ package io.wallee.codec
 import java.net.InetSocketAddress
 
 import akka.actor.ActorSystem
-import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.{ Flow, Source, Tcp }
+import akka.stream.scaladsl.{Flow, Source, Tcp}
 import akka.stream.testkit.scaladsl.TestSink
-import akka.util.{ ByteString, ByteStringBuilder, CompactByteString }
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import akka.util.{ByteString, ByteStringBuilder, CompactByteString}
 import io.wallee.protocol.MalformedMqttPacketException
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.{FlatSpec, Matchers}
 
 class FrameDecoderStageSpec extends FlatSpec with Matchers {
 
-  implicit val as = ActorSystem()
+  final implicit val as = ActorSystem()
 
-  implicit val fm = ActorFlowMaterializer()
+  final implicit val fm = ActorMaterializer(ActorMaterializerSettings(as))
 
   val connection = Tcp.IncomingConnection(new InetSocketAddress(111), new InetSocketAddress(222), Flow[ByteString])
 
@@ -39,7 +39,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedDecodedFrame = new MqttFrame(0x10, chunk.drop(2))
 
     Source.single(chunk)
-      .transform(() => new FrameDecoderStage(connection))
+      .via(new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
@@ -52,7 +52,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedDecodedFrame = new MqttFrame(0x21, CompactByteString(0x01, 0x02, 0x03, 0x04))
 
     Source(List(firstChunk, secondChunk))
-      .transform(() => new FrameDecoderStage(connection))
+      .via(new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
@@ -66,7 +66,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedDecodedFrame = new MqttFrame(0x31, CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05, 0x06))
 
     Source(List(firstChunk, secondChunk, thirdChunk))
-      .transform(() => new FrameDecoderStage(connection))
+      .via(new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(1)
       .expectNext(expectedDecodedFrame)
@@ -81,7 +81,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedSecondDecodedFrame = new MqttFrame(0x21, CompactByteString(0x01, 0x02, 0x03))
 
     Source(List(firstChunk, secondChunk, thirdChunk))
-      .transform(() => new FrameDecoderStage(connection))
+      .via(new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(2)
       .expectNext(expectedFirstDecodedFrame, expectedSecondDecodedFrame)
@@ -112,7 +112,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val expectedThirdDecodedFrame = new MqttFrame(0x31, thirdFramePayload)
 
     Source(List(firstChunk, secondChunk, thirdChunk, fourthChunk, fifthChunk))
-      .transform(() => new FrameDecoderStage(connection))
+      .via(new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(3)
       .expectNext(expectedFirstDecodedFrame, expectedSecondDecodedFrame, expectedThirdDecodedFrame)
@@ -126,7 +126,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
       val thirdChunk = CompactByteString(0x01, 0x02, 0x03, 0x04, 0x05)
 
       val error = Source(List(firstChunk, secondChunk, thirdChunk))
-        .transform(() => new FrameDecoderStage(connection))
+        .via(new FrameDecoderStage(connection))
         .runWith(TestSink.probe[MqttFrame])
         .request(1)
         .expectError()
@@ -170,7 +170,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
 
     Source(List(firstChunk, secondChunk))
       .log("frame")
-      .transform(() => new FrameDecoderStage(connection))
+      .via(new FrameDecoderStage(connection))
       .runWith(TestSink.probe[MqttFrame])
       .request(2)
       .expectNext(expectedDecodedConnectFrame, expectedDecodedPingReqFrame)

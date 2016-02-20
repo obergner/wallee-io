@@ -18,7 +18,8 @@ package io.wallee.codec
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushPullStage, SyncDirective }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import akka.util.ByteString
 import io.wallee.protocol.MalformedMqttPacketException
 import io.wallee.shared.logging.TcpConnectionLogging
@@ -29,11 +30,32 @@ import scala.util.control.Breaks._
  *
  *  ATTENTION: This class is stateful and NOT thread safe.
  */
-@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
 class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends PushPullStage[ByteString, MqttFrame] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[ByteString, MqttFrame]] with TcpConnectionLogging {
+
+  val in = Inlet[ByteString]("FrameDecoderStage.in")
+
+  val out = Outlet[MqttFrame]("FrameDecoderStage.out")
+
+  override def shape: FlowShape[ByteString, MqttFrame] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new FrameDecoderStageLogic(connection, system, shape)
+}
+
+@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
+private class FrameDecoderStageLogic(
+                                      protected[this] val connection: Tcp.IncomingConnection,
+                                      protected[this] val system: ActorSystem,
+                                      shape: FlowShape[ByteString, MqttFrame]
+                                    )
+  extends GraphStageLogic(shape) with TcpConnectionLogging {
 
   import FrameDecoderStage._
+
+  val in = shape.in
+
+  val out = shape.out
 
   private[this] var buffer: ByteString = ByteString.empty
 
@@ -46,15 +68,24 @@ class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(
 
   private[this] var currentState: DecodingState = NoDataConsumed(bufferAccess)
 
-  override def onPush(elem: ByteString, ctx: Context[MqttFrame]): SyncDirective = {
-    log.debug(s"DECODE FRAME: $elem (cached:$buffer)")
-    buffer ++= elem
-    emitFrameOrPull(ctx)
-  }
+  setHandler(in, new InHandler {
+    @throws[Exception](classOf[Exception])
+    override def onPush(): Unit = {
+      val elem = grab(in)
+      log.debug(s"DECODE FRAME: $elem (cached:$buffer)")
+      buffer ++= elem
+      emitFrameOrPull()
+    }
+  })
 
-  private def emitFrameOrPull(ctx: Context[MqttFrame]): SyncDirective = {
+  setHandler(out, new OutHandler {
+    @throws[Exception](classOf[Exception])
+    override def onPull(): Unit = emitFrameOrPull()
+  })
+
+  private def emitFrameOrPull(): Unit = {
     if (buffer.isEmpty) {
-      ctx.pull()
+      pull(in)
     } else {
       breakable {
         while (buffer.nonEmpty) {
@@ -70,17 +101,16 @@ class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(
         case MqttFrameDecoded(_, frame) =>
           currentState = NoDataConsumed(bufferAccess)
           log.debug(s"DECODED FRAME: $frame")
-          ctx.push(frame)
+          push(out, frame)
         case IllegalRemainingLength(_) =>
           currentState = NoDataConsumed(bufferAccess)
-          ctx.fail(new MalformedMqttPacketException("Illegal remaining length field in MQTT packet"))
-        case _ => ctx.pull()
+          val ex: MalformedMqttPacketException = new MalformedMqttPacketException("Illegal remaining length field in MQTT packet")
+          log.error(ex, s"Failed to decode MQTT frame: ${ex.getMessage}")
+          fail(out, ex)
+        case _ => pull(in)
       }
     }
   }
-
-  override def onPull(ctx: Context[MqttFrame]): SyncDirective = emitFrameOrPull(ctx)
-
 }
 
 object FrameDecoderStage {

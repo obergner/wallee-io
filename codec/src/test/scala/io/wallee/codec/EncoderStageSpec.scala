@@ -19,18 +19,18 @@ package io.wallee.codec
 import java.net.InetSocketAddress
 
 import akka.actor.ActorSystem
-import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.{ Flow, Source, Tcp }
+import akka.stream.scaladsl.{Flow, Source, Tcp}
 import akka.stream.testkit.scaladsl.TestSink
-import akka.util.{ ByteString, CompactByteString }
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import akka.util.{ByteString, CompactByteString}
 import io.wallee.protocol._
-import org.scalatest.{ FlatSpec, Matchers }
+import org.scalatest.{FlatSpec, Matchers}
 
 class EncoderStageSpec extends FlatSpec with Matchers {
 
-  implicit val as = ActorSystem()
+  final implicit val as = ActorSystem()
 
-  implicit val fm = ActorFlowMaterializer()
+  final implicit val fm = ActorMaterializer(ActorMaterializerSettings(as))
 
   val connection = Tcp.IncomingConnection(new InetSocketAddress(111), new InetSocketAddress(222), Flow[ByteString])
 
@@ -39,7 +39,7 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val connack = Connack(sessionPresent = true, ConnectReturnCode.BadUsernameOrPassword)
 
     Source.single[MqttPacket](connack)
-      .transform(() => new EncoderStage(connection))
+      .via(new EncoderStage(connection))
       .runWith(TestSink.probe[ByteString])
       .request(1)
       .expectNext(expectedResult)
@@ -51,7 +51,7 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val publish = Publish(dup = true, QoS.AtLeastOnce, retain = false, Topic("a/b"), PacketIdentifier(12), CompactByteString(0x00, 0x01, 0x02))
 
     Source.single[MqttPacket](publish)
-      .transform(() => new EncoderStage(connection))
+      .via(new EncoderStage(connection))
       .runWith(TestSink.probe[ByteString])
       .request(1)
       .expectNext(expectedResult)
@@ -63,7 +63,7 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val puback = Puback(PacketIdentifier(781))
 
     Source.single[MqttPacket](puback)
-      .transform(() => new EncoderStage(connection))
+      .via(new EncoderStage(connection))
       .runWith(TestSink.probe[ByteString])
       .request(1)
       .expectNext(expectedResult)
@@ -75,7 +75,7 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val pingResp = Pubrec(PacketIdentifier(781))
 
     Source.single[MqttPacket](pingResp)
-      .transform(() => new EncoderStage(connection))
+      .via(new EncoderStage(connection))
       .runWith(TestSink.probe[ByteString])
       .request(1)
       .expectNext(expectedResult)
@@ -87,7 +87,7 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val pingResp = Pubrel(PacketIdentifier(781))
 
     Source.single[MqttPacket](pingResp)
-      .transform(() => new EncoderStage(connection))
+      .via(new EncoderStage(connection))
       .runWith(TestSink.probe[ByteString])
       .request(1)
       .expectNext(expectedResult)
@@ -99,7 +99,7 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val pingResp = Pubcomp(PacketIdentifier(41279))
 
     Source.single[MqttPacket](pingResp)
-      .transform(() => new EncoderStage(connection))
+      .via(new EncoderStage(connection))
       .runWith(TestSink.probe[ByteString])
       .request(1)
       .expectNext(expectedResult)
@@ -111,7 +111,7 @@ class EncoderStageSpec extends FlatSpec with Matchers {
     val pingResp = PingResp()
 
     Source.single[MqttPacket](pingResp)
-      .transform(() => new EncoderStage(connection))
+      .via(new EncoderStage(connection))
       .runWith(TestSink.probe[ByteString])
       .request(1)
       .expectNext(expectedResult)

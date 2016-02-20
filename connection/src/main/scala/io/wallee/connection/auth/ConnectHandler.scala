@@ -18,29 +18,51 @@ package io.wallee.connection.auth
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
-import io.wallee.protocol.{ Connack, Connect, ConnectReturnCode }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import io.wallee.protocol.{Connack, Connect, ConnectReturnCode}
 import io.wallee.shared.logging.TcpConnectionLogging
-import io.wallee.spi.auth.{ AuthenticationPlugin, Credentials }
+import io.wallee.spi.auth.{AuthenticationPlugin, Credentials}
 
-/** A [[PushStage]] for handling [[Connect]] packets, i.e. authenticating clients.
+/** A [[GraphStage]] for handling [[Connect]] packets, i.e. authenticating clients.
  */
 class ConnectHandler(
   protected[this] val connection: Tcp.IncomingConnection,
   authenticationPlugin:           AuthenticationPlugin
 )(protected[this] implicit val system: ActorSystem)
-    extends PushStage[Connect, Connack] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[Connect, Connack]] with TcpConnectionLogging {
 
-  override def onPush(elem: Connect, ctx: Context[Connack]): SyncDirective = {
-    val clientCreds = new Credentials(elem.username.orNull, elem.password.orNull, connection.remoteAddress)
-    log.debug(s"Authenticating newly connected client using $clientCreds ...")
-    val principal = authenticationPlugin.authenticate(clientCreds)
-    if (principal.isPresent) {
-      log.info(s"Successfully authenticated newly connected client ${principal.get()}")
-      ctx.push(Connack(sessionPresent = false, ConnectReturnCode.ConnectionAccepted))
-    } else {
-      log.warning(s"Failed to authenticate newly connected client [remote-address: ${connection.remoteAddress}")
-      ctx.push(Connack(sessionPresent = false, ConnectReturnCode.BadUsernameOrPassword))
+  val in = Inlet[Connect]("ConnectHandler.in")
+
+  val out = Outlet[Connack]("ConnectHandler.out")
+
+  override def shape: FlowShape[Connect, Connack] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
+
+      setHandler(in, new InHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPush(): Unit = {
+          val elem = grab(in)
+          val clientCreds = new Credentials(elem.username.orNull, elem.password.orNull, connection.remoteAddress)
+          log.debug(s"Authenticating newly connected client using $clientCreds ...")
+          val principal = authenticationPlugin.authenticate(clientCreds)
+          if (principal.isPresent) {
+            log.info(s"Successfully authenticated newly connected client ${principal.get()}")
+            push(out, Connack(sessionPresent = false, ConnectReturnCode.ConnectionAccepted))
+          } else {
+            log.warning(s"Failed to authenticate newly connected client [remote-address: ${connection.remoteAddress}")
+            push(out, Connack(sessionPresent = false, ConnectReturnCode.BadUsernameOrPassword))
+          }
+        }
+      })
+
+      setHandler(out, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(in)
+        }
+      })
     }
-  }
 }

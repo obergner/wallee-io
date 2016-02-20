@@ -19,23 +19,45 @@ package io.wallee.connection.monitor
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage.{ Context, PushStage, SyncDirective }
+import akka.stream.stage._
+import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
 import io.wallee.protocol.MqttPacket
 import io.wallee.shared.logging.TcpConnectionLogging
 
-/** [[PushStage]] for logging incoming/outgoing [[MqttPacket]]s.
+/** [[GraphStage]] for logging incoming/outgoing [[MqttPacket]]s.
  *
  *  @param logPrefix Prefix to prepend to each log message, typically one of "RCVD" and "SEND"
- *  @param level Log level to use when logging network packets
+  * @param level     Log level to use when logging network packets
  */
 final class LogMqttPackets(
   protected[this] val connection: Tcp.IncomingConnection,
   logPrefix:                      String, level: Logging.LogLevel
 )(protected[this] implicit val system: ActorSystem)
-    extends PushStage[MqttPacket, MqttPacket] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
 
-  override def onPush(elem: MqttPacket, ctx: Context[MqttPacket]): SyncDirective = {
-    log.log(level, s"$logPrefix: $elem")
-    ctx.push(elem)
-  }
+  val in = Inlet[MqttPacket]("LogMqttPackets.in")
+
+  val out = Outlet[MqttPacket]("LogMqttPackets.out")
+
+  override def shape: FlowShape[MqttPacket, MqttPacket] = FlowShape.of(in, out)
+
+  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
+    new GraphStageLogic(shape) {
+
+      setHandler(in, new InHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPush(): Unit = {
+          val elem = grab(in)
+          log.log(level, s"$logPrefix: $elem")
+          push(out, elem)
+        }
+      })
+
+      setHandler(out, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(in)
+        }
+      })
+    }
 }
