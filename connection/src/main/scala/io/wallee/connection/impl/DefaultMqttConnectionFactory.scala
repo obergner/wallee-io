@@ -21,13 +21,13 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream._
 import akka.stream.scaladsl._
-import akka.stream.stage.{GraphStage, GraphStageLogic, InHandler}
+import akka.stream.stage.{ GraphStage, GraphStageLogic, InHandler }
 import akka.util.ByteString
 import com.typesafe.config.Config
-import io.wallee.codec.{DecoderStage, EncoderStage, FrameDecoderStage}
+import io.wallee.codec.{ DecoderStage, EncoderStage, FrameDecoderStage }
 import io.wallee.connection.MqttConnectionFactory
 import io.wallee.connection.auth.ConnectHandler
-import io.wallee.connection.monitor.{LogMqttPackets, LogNetworkPackets}
+import io.wallee.connection.monitor.{ LogMqttPackets, LogNetworkPackets }
 import io.wallee.connection.ping.PingReqHandler
 import io.wallee.connection.publish.PublishHandler
 import io.wallee.protocol._
@@ -36,9 +36,9 @@ import io.wallee.spi.auth.AuthenticationPlugin
 /**
  */
 class DefaultMqttConnectionFactory(
-                                    config: Config,
-                                    authenticationPlugin: AuthenticationPlugin
-                                  )(protected[this] implicit val system: ActorSystem)
+  config:               Config,
+  authenticationPlugin: AuthenticationPlugin
+)(protected[this] implicit val system: ActorSystem)
     extends MqttConnectionFactory {
 
   override def apply(conn: Tcp.IncomingConnection): Flow[ByteString, ByteString, _] =
@@ -114,9 +114,9 @@ final class PacketRouting extends GraphStage[FanOutShape4[MqttPacket, Connect, P
         @throws[Exception](classOf[Exception])
         override def onPush(): Unit = {
           grab(incomingMqttPackets) match {
-            case p: Connect => push(forwardedConnectPackets, p)
-            case p: PingReq => push(forwardedPingRequests, p)
-            case p: Publish => push(forwardedPublishPackets, p)
+            case p: Connect    => push(forwardedConnectPackets, p)
+            case p: PingReq    => push(forwardedPingRequests, p)
+            case p: Publish    => push(forwardedPublishPackets, p)
             case p: MqttPacket => push(forwardedMqttPackets, p)
           }
         }

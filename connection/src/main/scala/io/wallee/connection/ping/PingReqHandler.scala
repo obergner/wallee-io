@@ -19,14 +19,14 @@ package io.wallee.connection.ping
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import io.wallee.protocol._
 import io.wallee.shared.logging.TcpConnectionLogging
 
 /** A [[GraphStage]] for handling [[PingReq]] packets, i.e. responding with a [[PingResp]].
  */
 class PingReqHandler(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-  extends GraphStage[FlowShape[PingReq, PingResp]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[PingReq, PingResp]] with TcpConnectionLogging {
 
   val in = Inlet[PingReq]("PingReqHandler.in")
 

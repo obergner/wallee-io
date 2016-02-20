@@ -19,16 +19,16 @@ package io.wallee.codec
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import io.wallee.protocol.MqttPacket
 import io.wallee.shared.logging.TcpConnectionLogging
 
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /** Transform [[MqttFrame]]s into [[MqttPacket]]s.
  */
 final class DecoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-  extends GraphStage[FlowShape[MqttFrame, MqttPacket]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[MqttFrame, MqttPacket]] with TcpConnectionLogging {
 
   val in = Inlet[MqttFrame]("DecoderStage.in")
 

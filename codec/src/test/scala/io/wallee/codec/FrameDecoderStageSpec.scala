@@ -19,12 +19,12 @@ package io.wallee.codec
 import java.net.InetSocketAddress
 
 import akka.actor.ActorSystem
-import akka.stream.scaladsl.{Flow, Source, Tcp}
+import akka.stream.scaladsl.{ Flow, Source, Tcp }
 import akka.stream.testkit.scaladsl.TestSink
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
-import akka.util.{ByteString, ByteStringBuilder, CompactByteString}
+import akka.stream.{ ActorMaterializer, ActorMaterializerSettings }
+import akka.util.{ ByteString, ByteStringBuilder, CompactByteString }
 import io.wallee.protocol.MalformedMqttPacketException
-import org.scalatest.{FlatSpec, Matchers}
+import org.scalatest.{ FlatSpec, Matchers }
 
 class FrameDecoderStageSpec extends FlatSpec with Matchers {
 

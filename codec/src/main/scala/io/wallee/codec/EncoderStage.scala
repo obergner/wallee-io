@@ -19,17 +19,17 @@ package io.wallee.codec
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import akka.util.ByteString
 import io.wallee.protocol.MqttPacket
 import io.wallee.shared.logging.TcpConnectionLogging
 
-import scala.util.{Failure, Success}
+import scala.util.{ Failure, Success }
 
 /** Flow stage for encoding [[MqttPacket]]s.
  */
 class EncoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-  extends GraphStage[FlowShape[MqttPacket, ByteString]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[MqttPacket, ByteString]] with TcpConnectionLogging {
 
   val in = Inlet[MqttPacket]("EncoderStage.in")
 
@@ -49,7 +49,7 @@ class EncoderStage(protected[this] val connection: Tcp.IncomingConnection)(prote
           log.debug(s"ENCODED: $elem -> $encodedPacket")
           encodedPacket match {
             case Success(buffer) => push(out, buffer)
-            case Failure(ex) => fail(out, ex)
+            case Failure(ex)     => fail(out, ex)
           }
         }
       })

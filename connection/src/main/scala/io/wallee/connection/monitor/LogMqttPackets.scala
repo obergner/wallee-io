@@ -20,20 +20,20 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import io.wallee.protocol.MqttPacket
 import io.wallee.shared.logging.TcpConnectionLogging
 
 /** [[GraphStage]] for logging incoming/outgoing [[MqttPacket]]s.
  *
  *  @param logPrefix Prefix to prepend to each log message, typically one of "RCVD" and "SEND"
-  * @param level     Log level to use when logging network packets
+ *  @param level     Log level to use when logging network packets
  */
 final class LogMqttPackets(
   protected[this] val connection: Tcp.IncomingConnection,
   logPrefix:                      String, level: Logging.LogLevel
 )(protected[this] implicit val system: ActorSystem)
-  extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
 
   val in = Inlet[MqttPacket]("LogMqttPackets.in")
 

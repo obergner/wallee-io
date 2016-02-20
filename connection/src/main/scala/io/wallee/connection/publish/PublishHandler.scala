@@ -19,8 +19,8 @@ package io.wallee.connection.publish
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
-import io.wallee.protocol.{Puback, Publish}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
+import io.wallee.protocol.{ Puback, Publish }
 import io.wallee.shared.logging.TcpConnectionLogging
 
 /** Handle [[Publish]] messages.
@@ -28,7 +28,7 @@ import io.wallee.shared.logging.TcpConnectionLogging
  *  @todo Implementation needed
  */
 class PublishHandler(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-  extends GraphStage[FlowShape[Publish, Puback]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[Publish, Puback]] with TcpConnectionLogging {
 
   val in = Inlet[Publish]("PublishHandler.in")
 

@@ -19,10 +19,10 @@ package io.wallee.connection.auth
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
-import io.wallee.protocol.{Connack, Connect, ConnectReturnCode}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
+import io.wallee.protocol.{ Connack, Connect, ConnectReturnCode }
 import io.wallee.shared.logging.TcpConnectionLogging
-import io.wallee.spi.auth.{AuthenticationPlugin, Credentials}
+import io.wallee.spi.auth.{ AuthenticationPlugin, Credentials }
 
 /** A [[GraphStage]] for handling [[Connect]] packets, i.e. authenticating clients.
  */
@@ -30,7 +30,7 @@ class ConnectHandler(
   protected[this] val connection: Tcp.IncomingConnection,
   authenticationPlugin:           AuthenticationPlugin
 )(protected[this] implicit val system: ActorSystem)
-  extends GraphStage[FlowShape[Connect, Connack]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[Connect, Connack]] with TcpConnectionLogging {
 
   val in = Inlet[Connect]("ConnectHandler.in")
 

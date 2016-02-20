@@ -19,7 +19,7 @@ package io.wallee.codec
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import akka.stream.stage._
-import akka.stream.{Attributes, FlowShape, Inlet, Outlet}
+import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
 import akka.util.ByteString
 import io.wallee.protocol.MalformedMqttPacketException
 import io.wallee.shared.logging.TcpConnectionLogging
@@ -31,7 +31,7 @@ import scala.util.control.Breaks._
  *  ATTENTION: This class is stateful and NOT thread safe.
  */
 class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-  extends GraphStage[FlowShape[ByteString, MqttFrame]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[ByteString, MqttFrame]] with TcpConnectionLogging {
 
   val in = Inlet[ByteString]("FrameDecoderStage.in")
 
@@ -45,11 +45,11 @@ class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(
 
 @SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
 private class FrameDecoderStageLogic(
-                                      protected[this] val connection: Tcp.IncomingConnection,
-                                      protected[this] val system: ActorSystem,
-                                      shape: FlowShape[ByteString, MqttFrame]
-                                    )
-  extends GraphStageLogic(shape) with TcpConnectionLogging {
+  protected[this] val connection: Tcp.IncomingConnection,
+  protected[this] val system:     ActorSystem,
+  shape:                          FlowShape[ByteString, MqttFrame]
+)
+    extends GraphStageLogic(shape) with TcpConnectionLogging {
 
   import FrameDecoderStage._
 
