@@ -14,33 +14,33 @@
  * limitations under the License.
  */
 
-package io.wallee.connection.monitor
+package io.wallee.connection
 
 import akka.actor.ActorSystem
-import akka.event.Logging
 import akka.stream.scaladsl.Tcp
-import akka.stream.stage._
+import akka.stream.stage.{ GraphStage, GraphStageLogic, InHandler, OutHandler }
 import akka.stream.{ Attributes, FlowShape, Inlet, Outlet }
-import akka.util.ByteString
-import io.wallee.shared._
+import io.wallee.connection.auth.ConnectProcessor
+import io.wallee.connection.ping.PingReqProcessor
+import io.wallee.connection.publish.PublishProcessor
+import io.wallee.protocol.{ Connect, MqttPacket, PingReq, Publish }
 import io.wallee.shared.logging.TcpConnectionLogging
 
-/** [[GraphStage]] for logging incoming/outgoing network packets as HEX strings.
- *
- *  @param logPrefix Prefix to prepend to each log message, typically one of "RCVD" and "SEND"
- *  @param level     Log level to use when logging network packets
+/** [[GraphStage]] for logging incoming/outgoing [[MqttPacket]]s.
  */
-final class LogNetworkPackets(
-  protected[this] val connection: Tcp.IncomingConnection,
-  logPrefix:                      String, level: Logging.LogLevel
+final class ProtocolHandler(
+  connectProcessor:               ConnectProcessor,
+  pingReqProcessor:               PingReqProcessor,
+  publishProcessor:               PublishProcessor,
+  protected[this] val connection: Tcp.IncomingConnection
 )(protected[this] implicit val system: ActorSystem)
-    extends GraphStage[FlowShape[ByteString, ByteString]] with TcpConnectionLogging {
+    extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
 
-  val in = Inlet[ByteString]("LogNetworkPackets.in")
+  val in = Inlet[MqttPacket]("ProtocolHandler.in")
 
-  val out = Outlet[ByteString]("LogNetworkPackets.out")
+  val out = Outlet[MqttPacket]("ProtocolHandler.out")
 
-  override def shape: FlowShape[ByteString, ByteString] = FlowShape.of(in, out)
+  override def shape: FlowShape[MqttPacket, MqttPacket] = FlowShape.of(in, out)
 
   override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
     new GraphStageLogic(shape) {
@@ -49,8 +49,13 @@ final class LogNetworkPackets(
         @throws[Exception](classOf[Exception])
         override def onPush(): Unit = {
           val elem = grab(in)
-          log.log(level, s"$logPrefix: ${byteStringToHex(elem)} (HEX)")
-          push(out, elem)
+          val optionalResponse = elem match {
+            case p: Connect => connectProcessor.process(p)
+            case p: PingReq => pingReqProcessor.process(p)
+            case p: Publish => publishProcessor.process(p)
+            case _          => None
+          }
+          optionalResponse foreach { resp => push(out, resp) }
         }
       })
 
@@ -61,14 +66,4 @@ final class LogNetworkPackets(
         }
       })
     }
-}
-
-object LogNetworkPackets {
-
-  def apply(
-    connection: Tcp.IncomingConnection,
-    logPrefix:  String,
-    level:      Logging.LogLevel
-  )(implicit system: ActorSystem): LogNetworkPackets =
-    new LogNetworkPackets(connection, logPrefix, level)(system)
 }

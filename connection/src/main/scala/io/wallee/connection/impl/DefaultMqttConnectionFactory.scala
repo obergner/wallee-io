@@ -21,16 +21,14 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream._
 import akka.stream.scaladsl._
-import akka.stream.stage.{ GraphStage, GraphStageLogic, InHandler, OutHandler }
 import akka.util.ByteString
 import com.typesafe.config.Config
 import io.wallee.codec.{ DecoderStage, EncoderStage, FrameDecoderStage }
-import io.wallee.connection.MqttConnectionFactory
-import io.wallee.connection.auth.ConnectHandler
+import io.wallee.connection.auth.ConnectProcessor
 import io.wallee.connection.monitor.{ LogMqttPackets, LogNetworkPackets }
-import io.wallee.connection.ping.PingReqHandler
-import io.wallee.connection.publish.PublishHandler
-import io.wallee.protocol._
+import io.wallee.connection.ping.PingReqProcessor
+import io.wallee.connection.publish.PublishProcessor
+import io.wallee.connection.{ MqttConnectionFactory, ProtocolHandler }
 import io.wallee.spi.auth.AuthenticationPlugin
 
 /**
@@ -45,9 +43,7 @@ class DefaultMqttConnectionFactory(
     Flow.fromGraph[ByteString, ByteString, NotUsed](GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
       import GraphDSL.Implicits._
 
-      system.log.info(s"[${conn.remoteAddress}] Creating connection handler pipeline ...")
-
-      val parallelPipeline: Flow[MqttPacket, MqttPacket, NotUsed] = parallelProcessingPipelines(conn)
+      system.log.debug(s"[${conn.remoteAddress}] Creating connection handler pipeline ...")
 
       val input = builder.add(Flow[ByteString])
       val output = builder.add(Flow[ByteString])
@@ -57,101 +53,18 @@ class DefaultMqttConnectionFactory(
         .via(new FrameDecoderStage(conn))
         .via(new DecoderStage(conn))
         .via(new LogMqttPackets(conn, "RCVD", Logging.DebugLevel))
-        .via(parallelProcessingPipelines(conn))
+        .via(protocolHandler(conn))
         .via(new LogMqttPackets(conn, "SEND", Logging.DebugLevel))
         .via(new EncoderStage(conn))
         .via(new LogNetworkPackets(conn, "SEND", Logging.DebugLevel))
         .~>(output.in)
 
-      system.log.info(s"[${conn.remoteAddress}] Connection handler pipeline created")
+      system.log.debug(s"[${conn.remoteAddress}] Connection handler pipeline created")
 
       FlowShape(input.in, output.out)
     })
 
-  private[this] def parallelProcessingPipelines(conn: Tcp.IncomingConnection): Flow[MqttPacket, MqttPacket, NotUsed] =
-    Flow.fromGraph[MqttPacket, MqttPacket, NotUsed](GraphDSL.create() { implicit builder =>
-      import GraphDSL.Implicits._
-
-      val packetRouter: PacketRouting = new PacketRouting
-      val fanOut = builder.add(packetRouter)
-      val fanIn = builder.add(Merge[MqttPacket](4))
-
-      fanOut.out0
-        .via(new ConnectHandler(conn, authenticationPlugin))
-        .~>(fanIn.in(0))
-
-      fanOut.out1
-        .via(new PingReqHandler(conn))
-        .~>(fanIn.in(1))
-
-      fanOut.out2
-        .via(new PublishHandler(conn))
-        .~>(fanIn.in(2))
-
-      fanOut.out3
-        .~>(fanIn.in(3))
-
-      FlowShape(fanOut.in, fanIn.out)
-    })
-}
-
-final class PacketRouting extends GraphStage[FanOutShape4[MqttPacket, Connect, PingReq, Publish, MqttPacket]] {
-
-  val incomingMqttPackets = Inlet[MqttPacket]("PacketRouting.incomingMqttPackets")
-
-  val forwardedConnectPackets = Outlet[Connect]("PacketRouting.forwardedConnectPackets")
-
-  val forwardedPingRequests = Outlet[PingReq]("PacketRouting.forwardedPingRequests")
-
-  val forwardedPublishPackets = Outlet[Publish]("PacketRouting.forwardedPublishPackets")
-
-  val forwardedMqttPackets = Outlet[MqttPacket]("PacketRouting.forwardedMqttPackets")
-
-  override def shape: FanOutShape4[MqttPacket, Connect, PingReq, Publish, MqttPacket] = {
-    new FanOutShape4[MqttPacket, Connect, PingReq, Publish, MqttPacket]("PacketRoutingShape")
+  private[this] def protocolHandler(conn: Tcp.IncomingConnection): ProtocolHandler = {
+    new ProtocolHandler(new ConnectProcessor(conn, authenticationPlugin), new PingReqProcessor(conn), new PublishProcessor(conn), conn)
   }
-
-  override def createLogic(inheritedAttributes: Attributes): GraphStageLogic =
-    new GraphStageLogic(shape) {
-
-      setHandler(incomingMqttPackets, new InHandler {
-        @throws[Exception](classOf[Exception])
-        override def onPush(): Unit = {
-          grab(incomingMqttPackets) match {
-            case p: Connect    => push(forwardedConnectPackets, p)
-            case p: PingReq    => push(forwardedPingRequests, p)
-            case p: Publish    => push(forwardedPublishPackets, p)
-            case p: MqttPacket => push(forwardedMqttPackets, p)
-          }
-        }
-      })
-
-      setHandler(forwardedConnectPackets, new OutHandler {
-        @throws[Exception](classOf[Exception])
-        override def onPull(): Unit = {
-          pull(incomingMqttPackets)
-        }
-      })
-
-      setHandler(forwardedPingRequests, new OutHandler {
-        @throws[Exception](classOf[Exception])
-        override def onPull(): Unit = {
-          pull(incomingMqttPackets)
-        }
-      })
-
-      setHandler(forwardedPublishPackets, new OutHandler {
-        @throws[Exception](classOf[Exception])
-        override def onPull(): Unit = {
-          pull(incomingMqttPackets)
-        }
-      })
-
-      setHandler(forwardedMqttPackets, new OutHandler {
-        @throws[Exception](classOf[Exception])
-        override def onPull(): Unit = {
-          pull(incomingMqttPackets)
-        }
-      })
-    }
 }
