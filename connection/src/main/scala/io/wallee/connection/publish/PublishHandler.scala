@@ -32,7 +32,7 @@ class PublishHandler(protected[this] val connection: Tcp.IncomingConnection)(pro
 
   val in = Inlet[Publish]("PublishHandler.in")
 
-  val out = Outlet[Puback]("PupblishHandler.out")
+  val out = Outlet[Puback]("PublishHandler.out")
 
   override def shape: FlowShape[Publish, Puback] = FlowShape.of(in, out)
 

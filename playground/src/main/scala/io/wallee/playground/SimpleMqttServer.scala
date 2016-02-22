@@ -17,14 +17,11 @@
 package io.wallee.playground
 
 import akka.actor.ActorSystem
-import akka.event.Logging
-import akka.stream.ActorFlowMaterializer
-import akka.stream.scaladsl.{Sink, Tcp}
+import akka.stream.scaladsl.Tcp
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import com.typesafe.config.ConfigFactory
 import io.wallee.connection.impl.DefaultMqttConnectionFactory
 import io.wallee.shared.plugin.auth.AuthenticationPluginFactoryLoader
-
-import scala.util.{Failure, Success}
 
 object SimpleMqttServer {
 
@@ -36,9 +33,7 @@ object SimpleMqttServer {
 
   def server(system: ActorSystem, address: String, port: Int): Unit = {
     implicit val sys = system
-    import system.dispatcher
-    implicit val materializer = ActorFlowMaterializer()
-    val log = Logging(system, getClass)
+    implicit val materializer = ActorMaterializer(ActorMaterializerSettings(sys))
 
     val config = ConfigFactory.load()
 
@@ -47,23 +42,14 @@ object SimpleMqttServer {
     val authenticationPluginFactory = authenticationPluginFactoryLoader.load()
     val authenticationPlugin = authenticationPluginFactory.apply(config)
 
-    val connectionFactory = new DefaultMqttConnectionFactory(config, authenticationPlugin, system)
-
-    val handler = Sink.foreach[Tcp.IncomingConnection] { conn =>
-      log.info(s"Client connected: [${conn.remoteAddress}]")
-
-      conn.handleWith(connectionFactory(conn))
-    }
+    val connectionFactory = new DefaultMqttConnectionFactory(config, authenticationPlugin)
 
     val connections = Tcp().bind(address, port)
-    val binding = connections.to(handler).run()
 
-    binding.onComplete {
-      case Success(b) =>
-        log.info(s"Server started: [listen: ${b.localAddress}]")
-      case Failure(e) =>
-        log.error(e, s"Server start failed, could not bind to $address:$port: ${e.getMessage}")
-        system.shutdown()
+    connections runForeach { conn =>
+      system.log.info(s"Client connected: [${conn.remoteAddress}]")
+
+      conn.handleWith(connectionFactory(conn))
     }
   }
 }

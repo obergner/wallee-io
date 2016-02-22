@@ -21,7 +21,7 @@ import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream._
 import akka.stream.scaladsl._
-import akka.stream.stage.{ GraphStage, GraphStageLogic, InHandler }
+import akka.stream.stage.{ GraphStage, GraphStageLogic, InHandler, OutHandler }
 import akka.util.ByteString
 import com.typesafe.config.Config
 import io.wallee.codec.{ DecoderStage, EncoderStage, FrameDecoderStage }
@@ -41,9 +41,11 @@ class DefaultMqttConnectionFactory(
 )(protected[this] implicit val system: ActorSystem)
     extends MqttConnectionFactory {
 
-  override def apply(conn: Tcp.IncomingConnection): Flow[ByteString, ByteString, _] =
+  override def apply(conn: Tcp.IncomingConnection): Flow[ByteString, ByteString, NotUsed] =
     Flow.fromGraph[ByteString, ByteString, NotUsed](GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
       import GraphDSL.Implicits._
+
+      system.log.info(s"[${conn.remoteAddress}] Creating connection handler pipeline ...")
 
       val parallelPipeline: Flow[MqttPacket, MqttPacket, NotUsed] = parallelProcessingPipelines(conn)
 
@@ -55,11 +57,13 @@ class DefaultMqttConnectionFactory(
         .via(new FrameDecoderStage(conn))
         .via(new DecoderStage(conn))
         .via(new LogMqttPackets(conn, "RCVD", Logging.DebugLevel))
-        .via(parallelPipeline)
+        .via(parallelProcessingPipelines(conn))
         .via(new LogMqttPackets(conn, "SEND", Logging.DebugLevel))
         .via(new EncoderStage(conn))
         .via(new LogNetworkPackets(conn, "SEND", Logging.DebugLevel))
         .~>(output.in)
+
+      system.log.info(s"[${conn.remoteAddress}] Connection handler pipeline created")
 
       FlowShape(input.in, output.out)
     })
@@ -119,6 +123,34 @@ final class PacketRouting extends GraphStage[FanOutShape4[MqttPacket, Connect, P
             case p: Publish    => push(forwardedPublishPackets, p)
             case p: MqttPacket => push(forwardedMqttPackets, p)
           }
+        }
+      })
+
+      setHandler(forwardedConnectPackets, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(incomingMqttPackets)
+        }
+      })
+
+      setHandler(forwardedPingRequests, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(incomingMqttPackets)
+        }
+      })
+
+      setHandler(forwardedPublishPackets, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(incomingMqttPackets)
+        }
+      })
+
+      setHandler(forwardedMqttPackets, new OutHandler {
+        @throws[Exception](classOf[Exception])
+        override def onPull(): Unit = {
+          pull(incomingMqttPackets)
         }
       })
     }

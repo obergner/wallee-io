@@ -48,6 +48,7 @@ final class LogNetworkPackets(
       setHandler(in, new InHandler {
         @throws[Exception](classOf[Exception])
         override def onPush(): Unit = {
+          println("onPush")
           val elem = grab(in)
           log.log(level, s"$logPrefix: ${byteStringToHex(elem)} (HEX)")
           push(out, elem)
@@ -57,6 +58,7 @@ final class LogNetworkPackets(
       setHandler(out, new OutHandler {
         @throws[Exception](classOf[Exception])
         override def onPull(): Unit = {
+          println("onPull")
           pull(in)
         }
       })
@@ -65,5 +67,10 @@ final class LogNetworkPackets(
 
 object LogNetworkPackets {
 
-  def apply(connection: Tcp.IncomingConnection, logPrefix: String, level: Logging.LogLevel)(implicit system: ActorSystem): LogNetworkPackets = new LogNetworkPackets(connection, logPrefix, level)(system)
+  def apply(
+    connection: Tcp.IncomingConnection,
+    logPrefix:  String,
+    level:      Logging.LogLevel
+  )(implicit system: ActorSystem): LogNetworkPackets =
+    new LogNetworkPackets(connection, logPrefix, level)(system)
 }

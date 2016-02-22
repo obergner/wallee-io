@@ -17,9 +17,9 @@
 package io.wallee.playground
 
 import akka.actor.ActorSystem
-import akka.stream.ActorFlowMaterializer
 import akka.stream.scaladsl.{Flow, Sink, Source, Tcp}
 import akka.stream.stage.{Context, PushStage, StatefulStage, SyncDirective}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.util.ByteString
 
 import scala.annotation.tailrec
@@ -46,7 +46,7 @@ object CloseConnection {
   def server(system: ActorSystem, address: String, port: Int): Unit = {
     implicit val sys = system
     import system.dispatcher
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer(ActorMaterializerSettings(sys))
 
     val handler = Sink.foreach[Tcp.IncomingConnection] { conn =>
       println("Client connected from: " + conn.remoteAddress)
@@ -136,7 +136,7 @@ object CloseConnection {
   def client(system: ActorSystem, address: String, port: Int): Unit = {
     implicit val sys = system
     import system.dispatcher
-    implicit val materializer = ActorFlowMaterializer()
+    implicit val materializer = ActorMaterializer(ActorMaterializerSettings(sys))
 
     val testInput = ByteString("ECHO ME\n")
 
