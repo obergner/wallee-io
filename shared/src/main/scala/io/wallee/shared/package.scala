@@ -28,5 +28,5 @@ package object shared {
    *  @return HEX representation of `buffer`
    */
   def byteStringToHex(buffer: ByteString): String =
-    buffer.foldLeft[StringBuilder](new StringBuilder)({ (hexBuf, b) => hexBuf.append("%02x".format(b)) }).toString()
+    buffer.foldLeft[StringBuilder](new StringBuilder)({ (hexBuf, b) => hexBuf.append("%02x".format(b)) }).toString.toUpperCase
 }

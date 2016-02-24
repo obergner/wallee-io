@@ -122,6 +122,8 @@ object FrameDecoderStage {
     def apply(buf: ByteString): Unit
   }
 
+  def apply(conn: Tcp.IncomingConnection)(implicit system: ActorSystem): FrameDecoderStage = new FrameDecoderStage(conn)(system)
+
   /*
    * State machine
    */
