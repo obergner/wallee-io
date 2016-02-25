@@ -16,6 +16,7 @@
 
 package io.wallee.connection
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.scaladsl.{ BidiFlow, Tcp }
@@ -26,6 +27,6 @@ import io.wallee.protocol.MqttPacket
 
 object ProtocolStack {
 
-  def apply(conn: Tcp.IncomingConnection, level: Logging.LogLevel)(implicit system: ActorSystem): BidiFlow[MqttPacket, ByteString, ByteString, MqttPacket, _] =
+  def apply(conn: Tcp.IncomingConnection, level: Logging.LogLevel)(implicit system: ActorSystem): BidiFlow[MqttPacket, ByteString, ByteString, MqttPacket, NotUsed] =
     MqttPacketsLogging(conn, level)(system).atop(MqttCodec(conn)(system).atop(MqttFraming(conn)(system).atop(NetworkPacketsLogging(conn, level)(system))))
 }

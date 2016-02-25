@@ -16,6 +16,7 @@
 
 package io.wallee.connection.impl
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.scaladsl._
@@ -34,7 +35,7 @@ class DefaultMqttConnectionFactory(
 )(protected[this] implicit val system: ActorSystem)
     extends MqttConnectionFactory {
 
-  override def apply(conn: Tcp.IncomingConnection): Flow[ByteString, ByteString, _] = {
+  override def apply(conn: Tcp.IncomingConnection): Flow[ByteString, ByteString, NotUsed] = {
     ProtocolStack(conn, Logging.DebugLevel).reversed.join(Flow[MqttPacket].via(protocolHandler(conn)))
   }
 

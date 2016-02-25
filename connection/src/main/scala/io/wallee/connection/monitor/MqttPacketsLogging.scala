@@ -18,6 +18,7 @@ package io.wallee.connection.monitor
 
 import java.nio.ByteOrder
 
+import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
 import akka.stream.BidiShape
@@ -28,8 +29,8 @@ import io.wallee.protocol.MqttPacket
  */
 object MqttPacketsLogging {
 
-  def apply(conn: Tcp.IncomingConnection, level: Logging.LogLevel)(implicit system: ActorSystem): BidiFlow[MqttPacket, MqttPacket, MqttPacket, MqttPacket, _] =
-    BidiFlow.fromGraph(GraphDSL.create() { implicit builder =>
+  def apply(conn: Tcp.IncomingConnection, level: Logging.LogLevel)(implicit system: ActorSystem): BidiFlow[MqttPacket, MqttPacket, MqttPacket, MqttPacket, NotUsed] =
+    BidiFlow.fromGraph(GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
       implicit val order: ByteOrder = ByteOrder.LITTLE_ENDIAN
 
       val outbound = builder.add(Flow[MqttPacket].via(new LogMqttPackets(conn, "SEND", level)(system)))
