@@ -40,7 +40,9 @@ object Dependencies {
 
   val connectionDeps = commonDeps
 
-  val playgroundDeps = commonDeps
-
   val spiDeps = commonDeps
+
+  val serverDeps = commonDeps
+
+  val playgroundDeps = commonDeps
 }

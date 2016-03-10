@@ -26,8 +26,6 @@ import akka.stream.javadsl.BidiFlow
 import akka.stream.scaladsl.{ Flow, GraphDSL, Tcp }
 import akka.util.ByteString
 
-/** Created by obergner on 24.02.16.
- */
 object NetworkPacketsLogging {
 
   def apply(conn: Tcp.IncomingConnection, level: Logging.LogLevel)(implicit system: ActorSystem): BidiFlow[ByteString, ByteString, ByteString, ByteString, NotUsed] =
