@@ -50,8 +50,7 @@ class PublishDecoderSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // packet ID MSB (0)
       7, // packet ID LSB (7)
-      's', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e'
-    )
+      's', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val expectedResult = Publish(
@@ -60,8 +59,7 @@ class PublishDecoderSpec extends FlatSpec with Matchers {
       retain = true,
       Topic("surgemq"),
       PacketIdentifier(7),
-      CompactByteString('s', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e')
-    )
+      CompactByteString('s', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e'))
 
     PublishDecoder.decode(frame) match {
       case Failure(_)            => fail("Should not have failed given well-formed input")

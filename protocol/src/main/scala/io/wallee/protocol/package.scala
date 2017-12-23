@@ -26,12 +26,12 @@ package object protocol {
    *  a [[MalformedMqttPacketException]] otherwise.
    *
    *  @param requirement The requirement to fulfill
-   *  @param message Explanatory message in case `requirement` fails
+   *  @param message     Explanatory message in case `requirement` fails
    */
   @throws[MalformedMqttPacketException]
-  @inline final def requireWellformed(requirement: Boolean, message: => Any) {
+  @inline final def requireWellformed(requirement: Boolean, message: => Any): Unit = {
     if (!requirement) {
-      throw new MalformedMqttPacketException("Malformed MQTT packet: " + message)
+      throw MalformedMqttPacketException(s"Malformed MQTT packet: $message")
     }
   }
 

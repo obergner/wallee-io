@@ -158,8 +158,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // Password ID MSB (0)
       10, // Password ID LSB (10)
-      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't'
-    )
+      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't')
     val firstChunk = CompactByteString(connectTypeAndFlags, 0x3C) ++ connectPayload
 
     val pingReqTypeAndFlags: Int = 0x0C << 4

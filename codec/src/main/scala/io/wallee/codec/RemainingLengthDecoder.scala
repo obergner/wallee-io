@@ -24,9 +24,9 @@ import akka.util.ByteString
  *
  *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
  */
-@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
+@SuppressWarnings(Array("org.wartremover.warts.Var"))
 class RemainingLengthDecoder
-    extends (ByteString => Either[RemainingLengthDecoder.State, RemainingLengthDecoder.Result]) {
+  extends (ByteString => Either[RemainingLengthDecoder.State, RemainingLengthDecoder.Result]) {
 
   import RemainingLengthDecoder._
 

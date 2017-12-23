@@ -32,8 +32,7 @@ final class MqttFrame(private val typeAndFlags: Byte, val variableHeaderPlusPayl
   require(
     variableHeaderPlusPayload.size <= RemainingLengthDecoder.MaxRemainingLength,
     s"Variable header plus payload exceeds maximum allowed remaining length " +
-      s"of ${RemainingLengthDecoder.MaxRemainingLength} bytes: ${variableHeaderPlusPayload.size}"
-  )
+      s"of ${RemainingLengthDecoder.MaxRemainingLength} bytes: ${variableHeaderPlusPayload.size}")
 
   /** Return a byte representation of this MQTT packet's type.
    *

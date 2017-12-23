@@ -77,6 +77,7 @@ object MqttPacketEncoder {
     }
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
   private def doEncodeRemainingLength(remainingLength: Int, buffer: ByteString): ByteString = {
     if (remainingLength <= 0) {
       assert(buffer.size <= 4)

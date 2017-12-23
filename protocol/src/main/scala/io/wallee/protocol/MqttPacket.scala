@@ -21,13 +21,11 @@ package io.wallee.protocol
 abstract class MqttPacket {
   requireWellformed(
     remainingLength <= MqttPacket.MaxRemainingLength,
-    s"MQTT 3.1.1: an MQTT packet's remaining length MUST NOT exceed ${MqttPacket.MaxRemainingLength}"
-  )
+    s"MQTT 3.1.1: an MQTT packet's remaining length MUST NOT exceed ${MqttPacket.MaxRemainingLength}")
 
   /** This MQTT packet's length in bytes on the wire.
    *
    *  @return Length in bytes on the wire
-   *
    *  @todo Consider removing this method
    */
   def lengthInBytes: Int = {
@@ -48,7 +46,7 @@ object MqttPacket {
    *
    *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718023
    */
-  val RemainingLengthBase = 128
+  val RemainingLengthBase: Int = 128
 
   /** Maximum remaining length allowed by MQTT 3.1.1.
    *

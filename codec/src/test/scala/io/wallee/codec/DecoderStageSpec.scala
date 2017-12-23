@@ -63,8 +63,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // Password ID MSB (0)
       10, // Password ID LSB (10)
-      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't'
-    )
+      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val expectedResult = Connect("MQTT", ProtocolLevel.Level4, ClientId("surgemq"), cleanSession = true, 10, "surgemq", "verysecret", QoS.AtLeastOnce, retainWill = false, Topic("will"), "send me home")
@@ -86,8 +85,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // packet ID MSB (0)
       7, // packet ID LSB (7)
-      's', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e'
-    )
+      's', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val expectedResult = Publish(
@@ -96,8 +94,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       retain = true,
       Topic("surgemq"),
       PacketIdentifier(7),
-      CompactByteString('s', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e')
-    )
+      CompactByteString('s', 'e', 'n', 'd', ' ', 'm', 'e', ' ', 'h', 'o', 'm', 'e'))
 
     Source.single[MqttFrame](frame)
       .via(new DecoderStage(connection))
@@ -238,8 +235,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // Password ID MSB (0)
       10, // Password ID LSB (10)
-      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't'
-    )
+      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val error = Source.single[MqttFrame](frame)
@@ -276,8 +272,7 @@ class DecoderStageSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // Password ID MSB (0)
       10, // Password ID LSB (10)
-      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't'
-    )
+      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val error = Source.single[MqttFrame](frame)

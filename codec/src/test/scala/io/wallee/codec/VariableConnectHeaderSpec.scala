@@ -82,8 +82,7 @@ class VariableConnectHeaderSpec extends FlatSpec with Matchers {
       expectedWillQoS,
       expectedWillFlag,
       expectedCleanSession,
-      expectedKeepAliveSecs
-    )
+      expectedKeepAliveSecs)
     val inputBuffer = CompactByteString(0x00, 0x04, 0x4D, 0x51, 0x54, 0x54, 0x04, 0xEF, 0x00, 0x80)
     VariableConnectHeader.decode(inputBuffer) match {
       case Failure(_)                 => fail("Should not have returned Failure")

@@ -27,7 +27,7 @@ import io.wallee.shared.logging.TcpConnectionLogging
  *  @todo Implementation needed
  */
 final class PublishProcessor(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends MqttPacketProcessor[Publish, MqttPacket] with TcpConnectionLogging {
+  extends MqttPacketProcessor[Publish, MqttPacket] with TcpConnectionLogging {
 
   override def process(publish: Publish): Option[MqttPacket] = {
     log.debug(s"PUBLISH:   $publish ...")

@@ -49,8 +49,7 @@ class ConnectDecoderSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // Password ID MSB (0)
       10, // Password ID LSB (10)
-      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't'
-    )
+      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     ConnectDecoder.decode(frame) match {
@@ -107,8 +106,7 @@ class ConnectDecoderSpec extends FlatSpec with Matchers {
       8, // Keep Alive LSB (8)
       0, // Client ID MSB (0)
       7, // Client ID LSB (7)
-      's', 'u', 'r', 'g', 'e', 'm', 'q'
-    )
+      's', 'u', 'r', 'g', 'e', 'm', 'q')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val expectedResult = Connect("MQTT4", ProtocolLevel.UnsupportedProtocolLevel, ClientId("surgemq"), cleanSession = false, 3080, None, None, QoS.AtMostOnce, retainWill = false, None, None)
@@ -144,8 +142,7 @@ class ConnectDecoderSpec extends FlatSpec with Matchers {
       's', 'u', 'r', 'g', 'e', 'm', 'q',
       0, // Password ID MSB (0)
       10, // Password ID LSB (10)
-      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't'
-    )
+      'v', 'e', 'r', 'y', 's', 'e', 'c', 'r', 'e', 't')
     val frame = new MqttFrame(typeAndFlags.toByte, variableHeaderPlusPayload)
 
     val expectedResult = Connect("MQTT", ProtocolLevel.Level4, ClientId("surgemq"), cleanSession = true, 10, "surgemq", "verysecret", QoS.AtLeastOnce, retainWill = false, Topic("will"), "send me home")

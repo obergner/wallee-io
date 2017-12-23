@@ -31,11 +31,11 @@ import scala.util.control.Breaks._
  *  ATTENTION: This class is stateful and NOT thread safe.
  */
 class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends GraphStage[FlowShape[ByteString, MqttFrame]] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[ByteString, MqttFrame]] with TcpConnectionLogging {
 
-  val in = Inlet[ByteString]("FrameDecoderStage.in")
+  val in: Inlet[ByteString] = Inlet[ByteString]("FrameDecoderStage.in")
 
-  val out = Outlet[MqttFrame]("FrameDecoderStage.out")
+  val out: Outlet[MqttFrame] = Outlet[MqttFrame]("FrameDecoderStage.out")
 
   override def shape: FlowShape[ByteString, MqttFrame] = FlowShape.of(in, out)
 
@@ -43,19 +43,18 @@ class FrameDecoderStage(protected[this] val connection: Tcp.IncomingConnection)(
     new FrameDecoderStageLogic(connection, system, shape)
 }
 
-@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
+@SuppressWarnings(Array("org.wartremover.warts.Var"))
 private class FrameDecoderStageLogic(
-  protected[this] val connection: Tcp.IncomingConnection,
-  protected[this] val system:     ActorSystem,
-  shape:                          FlowShape[ByteString, MqttFrame]
-)
-    extends GraphStageLogic(shape) with TcpConnectionLogging {
+    protected[this] val connection: Tcp.IncomingConnection,
+    protected[this] val system:     ActorSystem,
+    shape:                          FlowShape[ByteString, MqttFrame])
+  extends GraphStageLogic(shape) with TcpConnectionLogging {
 
   import FrameDecoderStage._
 
-  val in = shape.in
+  val in: Inlet[ByteString] = shape.in
 
-  val out = shape.out
+  val out: Outlet[MqttFrame] = shape.out
 
   private[this] var buffer: ByteString = ByteString.empty
 
@@ -83,6 +82,7 @@ private class FrameDecoderStageLogic(
     override def onPull(): Unit = emitFrameOrPull()
   })
 
+  @SuppressWarnings(Array("org.wartremover.warts.While"))
   private def emitFrameOrPull(): Unit = {
     if (buffer.isEmpty) {
       pull(in)
@@ -104,7 +104,7 @@ private class FrameDecoderStageLogic(
           push(out, frame)
         case IllegalRemainingLength(_) =>
           currentState = NoDataConsumed(bufferAccess)
-          val ex: MalformedMqttPacketException = new MalformedMqttPacketException("Illegal remaining length field in MQTT packet")
+          val ex: MalformedMqttPacketException = MalformedMqttPacketException("Illegal remaining length field in MQTT packet")
           log.error(ex, s"Failed to decode MQTT frame: ${ex.getMessage}")
           fail(out, ex)
         case _ => pull(in)
@@ -135,19 +135,18 @@ object FrameDecoderStage {
 
   final case class NoDataConsumed(buffer: Buffer) extends DecodingState(buffer) {
     override def onNewInput(): DecodingState = {
-      if (buffer().isEmpty) {
-        this
-      } else {
-        val firstHeaderByte = buffer().head
-        buffer(buffer().tail)
-        DecodingFixedHeader(buffer, firstHeaderByte)
+      buffer().headOption match {
+        case None => this
+        case Some(firstHeaderByte) =>
+          buffer(buffer().drop(1))
+          DecodingFixedHeader(buffer, firstHeaderByte)
       }
     }
   }
 
   final case class DecodingFixedHeader(buffer: Buffer, firstHeaderByte: Byte) extends DecodingState(buffer) {
 
-    private[this] val remainingLengthDecoder = new RemainingLengthDecoder
+    private[this] val remainingLengthDecoder: RemainingLengthDecoder = new RemainingLengthDecoder
 
     override def onNewInput(): DecodingState = {
       remainingLengthDecoder(buffer()) match {
@@ -172,11 +171,11 @@ object FrameDecoderStage {
     override def onNewInput(): DecodingState = throw new UnsupportedOperationException("IllegalRemainingLength is a terminal state")
   }
 
-  @SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
+  @SuppressWarnings(Array("org.wartremover.warts.Var"))
   final case class ConsumingVariableHeaderAndPayload(buffer: Buffer, firstHeaderByte: Byte, remainingLength: Int)
-      extends DecodingState(buffer) {
+    extends DecodingState(buffer) {
 
-    private[this] var variableHeaderAndPayload = ByteString.empty
+    private[this] var variableHeaderAndPayload: ByteString = ByteString.empty
 
     override def onNewInput(): DecodingState = {
       if (variableHeaderAndPayload.size + buffer().size < remainingLength) {

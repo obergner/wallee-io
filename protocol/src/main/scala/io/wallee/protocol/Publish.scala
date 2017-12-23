@@ -23,7 +23,7 @@ import akka.util.ByteString
  *  @see [[http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718037]]
  */
 final case class Publish(dup: Boolean, qosLevel: QoS, retain: Boolean, topic: Topic, packetId: PacketIdentifier, applicationMessage: ByteString)
-    extends MqttPacket {
+  extends MqttPacket {
 
   override def remainingLength: Int = {
     encodedLengthInBytesOf(topic) + 2 + applicationMessage.size

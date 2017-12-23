@@ -29,16 +29,15 @@ import io.wallee.shared.logging.TcpConnectionLogging
 /** [[GraphStage]] for logging incoming/outgoing [[MqttPacket]]s.
  */
 final class ProtocolHandler(
-  connectProcessor:               ConnectProcessor,
-  pingReqProcessor:               PingReqProcessor,
-  publishProcessor:               PublishProcessor,
-  protected[this] val connection: Tcp.IncomingConnection
-)(protected[this] implicit val system: ActorSystem)
-    extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
+    connectProcessor:               ConnectProcessor,
+    pingReqProcessor:               PingReqProcessor,
+    publishProcessor:               PublishProcessor,
+    protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
+  extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
 
-  val in = Inlet[MqttPacket]("ProtocolHandler.in")
+  val in: Inlet[MqttPacket] = Inlet[MqttPacket]("ProtocolHandler.in")
 
-  val out = Outlet[MqttPacket]("ProtocolHandler.out")
+  val out: Outlet[MqttPacket] = Outlet[MqttPacket]("ProtocolHandler.out")
 
   override def shape: FlowShape[MqttPacket, MqttPacket] = FlowShape.of(in, out)
 

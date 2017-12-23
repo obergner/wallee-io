@@ -29,11 +29,11 @@ import scala.util.{ Failure, Success }
 /** Flow stage for encoding [[MqttPacket]]s.
  */
 class EncoderStage(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-    extends GraphStage[FlowShape[MqttPacket, ByteString]] with TcpConnectionLogging {
+  extends GraphStage[FlowShape[MqttPacket, ByteString]] with TcpConnectionLogging {
 
-  val in = Inlet[MqttPacket]("EncoderStage.in")
+  val in: Inlet[MqttPacket] = Inlet[MqttPacket]("EncoderStage.in")
 
-  val out = Outlet[ByteString]("EncoderStage.out")
+  val out: Outlet[ByteString] = Outlet[ByteString]("EncoderStage.out")
 
   override def shape: FlowShape[MqttPacket, ByteString] = FlowShape.of(in, out)
 

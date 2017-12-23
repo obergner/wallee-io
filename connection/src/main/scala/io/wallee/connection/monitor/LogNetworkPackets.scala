@@ -31,14 +31,13 @@ import io.wallee.shared.logging.TcpConnectionLogging
  *  @param level     Log level to use when logging network packets
  */
 final class LogNetworkPackets(
-  protected[this] val connection: Tcp.IncomingConnection,
-  logPrefix:                      String, level: Logging.LogLevel
-)(protected[this] implicit val system: ActorSystem)
-    extends GraphStage[FlowShape[ByteString, ByteString]] with TcpConnectionLogging {
+    protected[this] val connection: Tcp.IncomingConnection,
+    logPrefix:                      String, level: Logging.LogLevel)(protected[this] implicit val system: ActorSystem)
+  extends GraphStage[FlowShape[ByteString, ByteString]] with TcpConnectionLogging {
 
-  val in = Inlet[ByteString]("LogNetworkPackets.in")
+  val in: Inlet[ByteString] = Inlet[ByteString]("LogNetworkPackets.in")
 
-  val out = Outlet[ByteString]("LogNetworkPackets.out")
+  val out: Outlet[ByteString] = Outlet[ByteString]("LogNetworkPackets.out")
 
   override def shape: FlowShape[ByteString, ByteString] = FlowShape.of(in, out)
 
@@ -68,7 +67,6 @@ object LogNetworkPackets {
   def apply(
     connection: Tcp.IncomingConnection,
     logPrefix:  String,
-    level:      Logging.LogLevel
-  )(implicit system: ActorSystem): LogNetworkPackets =
+    level:      Logging.LogLevel)(implicit system: ActorSystem): LogNetworkPackets =
     new LogNetworkPackets(connection, logPrefix, level)(system)
 }

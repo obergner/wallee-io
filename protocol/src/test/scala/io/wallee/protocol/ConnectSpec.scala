@@ -49,8 +49,7 @@ class ConnectSpec extends FlatSpec with Matchers {
       QoS.ExactlyOnce,
       retainWill = false,
       willTopic,
-      willMessage
-    )
+      willMessage)
 
     assert(underTest.lengthInBytes == expectedLength)
   }
@@ -87,8 +86,7 @@ class ConnectSpec extends FlatSpec with Matchers {
         QoS.ExactlyOnce,
         retainWill = false,
         Some(willTopic),
-        None
-      )
+        None)
     }
   }
 
@@ -113,8 +111,7 @@ class ConnectSpec extends FlatSpec with Matchers {
         QoS.ExactlyOnce,
         retainWill = false,
         Some(willTopic),
-        Some(willMessage)
-      )
+        Some(willMessage))
     }
   }
 }

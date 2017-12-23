@@ -30,14 +30,13 @@ import io.wallee.shared.logging.TcpConnectionLogging
  *  @param level     Log level to use when logging network packets
  */
 final class LogMqttPackets(
-  protected[this] val connection: Tcp.IncomingConnection,
-  logPrefix:                      String, level: Logging.LogLevel
-)(protected[this] implicit val system: ActorSystem)
-    extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
+    protected[this] val connection: Tcp.IncomingConnection,
+    logPrefix:                      String, level: Logging.LogLevel)(protected[this] implicit val system: ActorSystem)
+  extends GraphStage[FlowShape[MqttPacket, MqttPacket]] with TcpConnectionLogging {
 
-  val in = Inlet[MqttPacket]("LogMqttPackets.in")
+  val in: Inlet[MqttPacket] = Inlet[MqttPacket]("LogMqttPackets.in")
 
-  val out = Outlet[MqttPacket]("LogMqttPackets.out")
+  val out: Outlet[MqttPacket] = Outlet[MqttPacket]("LogMqttPackets.out")
 
   override def shape: FlowShape[MqttPacket, MqttPacket] = FlowShape.of(in, out)
 

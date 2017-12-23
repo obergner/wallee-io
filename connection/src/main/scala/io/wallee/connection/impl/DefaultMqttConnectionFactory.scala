@@ -30,10 +30,9 @@ import io.wallee.protocol.MqttPacket
 import io.wallee.spi.auth.AuthenticationPlugin
 
 class DefaultMqttConnectionFactory(
-  config:               Config,
-  authenticationPlugin: AuthenticationPlugin
-)(protected[this] implicit val system: ActorSystem)
-    extends MqttConnectionFactory {
+    config:               Config,
+    authenticationPlugin: AuthenticationPlugin)(protected[this] implicit val system: ActorSystem)
+  extends MqttConnectionFactory {
 
   override def apply(conn: Tcp.IncomingConnection): Flow[ByteString, ByteString, NotUsed] = {
     ProtocolStack(conn, Logging.DebugLevel).reversed.join(Flow[MqttPacket].via(protocolHandler(conn)))

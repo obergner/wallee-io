@@ -26,7 +26,7 @@ import scala.util.{ Failure, Success, Try }
  *
  *  @see [[http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718037]]
  */
-@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.MutableDataStructures"))
+@SuppressWarnings(Array("org.wartremover.warts.MutableDataStructures"))
 object SubscribeDecoder extends MqttPacketDecoder[Subscribe](PacketType.Subscribe) {
 
   import MqttPacketDecoder._
@@ -52,18 +52,19 @@ object SubscribeDecoder extends MqttPacketDecoder[Subscribe](PacketType.Subscrib
     decodeSubscriptionsAcc(payload, scala.collection.mutable.ArrayBuffer[Subscription]())
   }
 
+  @SuppressWarnings(Array("org.wartremover.warts.Recursion"))
   private def decodeSubscriptionsAcc(payload: ByteString, acc: scala.collection.mutable.ArrayBuffer[Subscription]): Try[List[Subscription]] = {
     if (payload.isEmpty) {
       Success(acc.toList)
     } else {
       decodeUtf8String(payload).flatMap[List[Subscription]]({
         case (topicFilter, remainder) =>
-          if (remainder.isEmpty) {
-            Failure(MalformedMqttPacketException("Topic filter misses QoS byte"))
-          } else {
-            val requestedQoS = decodeQoS(remainder.head)
-            acc.append(Subscription(TopicFilter(topicFilter), requestedQoS))
-            decodeSubscriptionsAcc(remainder.tail, acc)
+          remainder.headOption match {
+            case None => Failure(MalformedMqttPacketException("Topic filter misses QoS byte"))
+            case Some(head) =>
+              val requestedQoS = decodeQoS(head)
+              acc.append(Subscription(TopicFilter(topicFilter), requestedQoS))
+              decodeSubscriptionsAcc(remainder.drop(1), acc)
           }
       })
     }

@@ -37,7 +37,7 @@ object ConnectDecoder extends MqttPacketDecoder[Connect](PacketType.Connect) {
   }
 }
 
-@SuppressWarnings(Array("org.brianmckenna.wartremover.warts.Var"))
+@SuppressWarnings(Array("org.wartremover.warts.Var"))
 protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: VariableConnectHeader) {
 
   import MqttPacketDecoder._
@@ -72,8 +72,7 @@ protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: Va
             variableHeader.willQoS,
             variableHeader.willRetain,
             willTopic,
-            willMessage
-          )
+            willMessage)
       })
   }
 
@@ -119,16 +118,15 @@ protected[codec] final class StatefulConnectPacketDecoder(val variableHeader: Va
 }
 
 protected[codec] final case class VariableConnectHeader(
-  protocolName:  String,
-  protocolLevel: ProtocolLevel,
-  username:      Boolean,
-  password:      Boolean,
-  willRetain:    Boolean,
-  willQoS:       QoS,
-  willFlag:      Boolean,
-  cleanSession:  Boolean,
-  keepAliveSecs: Int
-)
+    protocolName:  String,
+    protocolLevel: ProtocolLevel,
+    username:      Boolean,
+    password:      Boolean,
+    willRetain:    Boolean,
+    willQoS:       QoS,
+    willFlag:      Boolean,
+    cleanSession:  Boolean,
+    keepAliveSecs: Int)
 
 protected[codec] object VariableConnectHeader {
 
@@ -172,8 +170,7 @@ protected[codec] object VariableConnectHeader {
     val cleanSession = (restBuffer(1) & CleanSessionFlag) == CleanSessionFlag
     decodeUint16(restBuffer.drop(2)) match {
       case Success((keepAliveSecs, remainder)) => Success(
-        (VariableConnectHeader(protocolName, protocolLevel, username, password, willRetain, willQoS, willFlag, cleanSession, keepAliveSecs), remainder)
-      )
+        (VariableConnectHeader(protocolName, protocolLevel, username, password, willRetain, willQoS, willFlag, cleanSession, keepAliveSecs), remainder))
       case Failure(ex) => Failure(ex)
     }
   }

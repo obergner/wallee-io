@@ -21,25 +21,23 @@ package io.wallee.protocol
  *  @see http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718028
  */
 final case class Connect(
-  protocolName:  String,
-  protocolLevel: ProtocolLevel,
-  clientId:      ClientId,
-  cleanSession:  Boolean,
-  keepAliveSecs: Int,
-  username:      Option[String],
-  password:      Option[String],
-  willQoS:       QoS,
-  retainWill:    Boolean,
-  willTopic:     Option[Topic],
-  willMessage:   Option[String]
-)
-    extends MqttPacket {
+    protocolName:  String,
+    protocolLevel: ProtocolLevel,
+    clientId:      ClientId,
+    cleanSession:  Boolean,
+    keepAliveSecs: Int,
+    username:      Option[String],
+    password:      Option[String],
+    willQoS:       QoS,
+    retainWill:    Boolean,
+    willTopic:     Option[Topic],
+    willMessage:   Option[String])
+  extends MqttPacket {
   requireWellformed(willQoS != QoS.Reserved, "QoS 'Reserved' MUST NOT be used")
   requireWellformed(keepAliveSecs <= Connect.MaxKeepAliveSecs, "Keep alive must not exceed 2^16 seconds")
   requireWellformed(
     (willTopic.isDefined && willMessage.isDefined) || (willTopic.isEmpty && willMessage.isEmpty),
-    "Either will topic and will message need to be given, or neither"
-  )
+    "Either will topic and will message need to be given, or neither")
 
   override def remainingLength: Int = {
     Connect.VariableHeaderBaseLengthInBytes +
@@ -69,8 +67,7 @@ object Connect {
     willQoS:       QoS,
     retainWill:    Boolean,
     willTopic:     Topic,
-    willMessage:   String
-  ): Connect = apply(
+    willMessage:   String): Connect = apply(
     protocolName,
     protocolLevel,
     clientId,
@@ -81,8 +78,7 @@ object Connect {
     willQoS,
     retainWill,
     Some(willTopic),
-    Some(willMessage)
-  )
+    Some(willMessage))
 
   def apply(
     protocolName:  String,
@@ -91,8 +87,7 @@ object Connect {
     cleanSession:  Boolean,
     keepAliveSecs: Int,
     username:      String,
-    password:      String
-  ): Connect = apply(
+    password:      String): Connect = apply(
     protocolName,
     protocolLevel,
     clientId,
@@ -103,16 +98,14 @@ object Connect {
     QoS.AtMostOnce,
     retainWill = false,
     None,
-    None
-  )
+    None)
 
   def apply(
     protocolName:  String,
     protocolLevel: ProtocolLevel,
     clientId:      ClientId,
     cleanSession:  Boolean,
-    keepAliveSecs: Int
-  ): Connect = apply(
+    keepAliveSecs: Int): Connect = apply(
     protocolName,
     protocolLevel,
     clientId,
@@ -123,7 +116,6 @@ object Connect {
     QoS.AtMostOnce,
     retainWill = false,
     None,
-    None
-  )
+    None)
 }
 

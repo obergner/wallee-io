@@ -27,7 +27,7 @@ object PingRespEncoder extends MqttPacketEncoder[PingResp] {
 
   private[this] val Type = PacketType.Pingresp << 4
 
-  private[this] val ZeroLength = 0x00
+  private[this] val ZeroLength: Int = 0x00
 
   override def encode(packet: PingResp): Try[ByteString] = {
     Success(CompactByteString(Type, ZeroLength))

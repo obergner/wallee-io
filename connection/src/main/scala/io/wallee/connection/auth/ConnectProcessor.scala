@@ -26,11 +26,11 @@ import io.wallee.spi.auth.{ AuthenticationPlugin, Credentials }
 /** An [[MqttPacketProcessor]] for handling [[Connect]] packets, i.e. authenticating clients.
  */
 final class ConnectProcessor(
-  protected[this] val connection: Tcp.IncomingConnection,
-  authenticationPlugin:           AuthenticationPlugin
-)(protected[this] implicit val system: ActorSystem)
-    extends MqttPacketProcessor[Connect, Connack] with TcpConnectionLogging {
+    protected[this] val connection: Tcp.IncomingConnection,
+    authenticationPlugin:           AuthenticationPlugin)(protected[this] implicit val system: ActorSystem)
+  extends MqttPacketProcessor[Connect, Connack] with TcpConnectionLogging {
 
+  @SuppressWarnings(Array("org.wartremover.warts.Null"))
   override def process(connect: Connect): Option[Connack] = {
     val clientCreds = new Credentials(connect.username.orNull, connect.password.orNull, connection.remoteAddress)
     log.debug(s"Authenticating newly connected client using $clientCreds ...")
