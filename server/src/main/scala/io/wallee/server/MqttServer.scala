@@ -47,8 +47,8 @@ class MqttServer(bindAddress: String, bindPort: Int, bindTimeout: Duration, exec
   }
 
   private def newHandle(serverBinding: ServerBinding): MqttServer.Handle = {
-    new MqttServer.Handle {
-      override def stop(): Try[Unit] = {
+    () =>
+      {
         try {
           val unbound: Future[Unit] = serverBinding.unbind().andThen[Unit] {
             case Success(_) =>
@@ -64,7 +64,6 @@ class MqttServer(bindAddress: String, bindPort: Int, bindTimeout: Duration, exec
           case ex: Throwable => Failure(ex)
         }
       }
-    }
   }
 
   private[this] def doStart(): ServerBinding = {
