@@ -16,8 +16,6 @@
 
 package io.wallee.codec
 
-import java.nio.ByteOrder
-
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.BidiShape
@@ -29,8 +27,6 @@ object MqttCodec {
 
   def apply(conn: Tcp.IncomingConnection)(implicit system: ActorSystem): BidiFlow[MqttPacket, ByteString, MqttFrame, MqttPacket, NotUsed] =
     BidiFlow.fromGraph(GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
-      implicit val order: ByteOrder = ByteOrder.LITTLE_ENDIAN
-
       val outbound = builder.add(Flow[MqttPacket].via(new EncoderStage(conn)(system)))
       val inbound = builder.add(Flow[MqttFrame].via(new DecoderStage(conn)(system)))
 

@@ -17,7 +17,7 @@
 package io.wallee.codec
 
 import akka.util.CompactByteString
-import io.wallee.protocol.{ PingResp, Connack, ConnectReturnCode }
+import io.wallee.protocol.PingResp
 import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.util.{ Failure, Success }

@@ -1,13 +1,13 @@
 import sbt._
 
 object Version {
-  val akka = "2.4.2"
-  val akkaLog4j = "1.1.2"
+  val akka = "2.5.8"
+  val akkaLog4j = "1.6.0"
   val log4j = "2.5"
-  val scala = "2.11.7"
-  val metricsScala = "3.5.1_a2.3"
+  val scala = "2.12.4"
+  val metricsScala = "3.5.9_a2.4"
 
-  val scalaTest = "2.2.6"
+  val scalaTest = "3.0.4"
 }
 
 object Library {

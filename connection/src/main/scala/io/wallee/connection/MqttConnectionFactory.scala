@@ -17,11 +17,10 @@
 package io.wallee.connection
 
 import akka.NotUsed
-import akka.stream.Graph
 import akka.stream.scaladsl.{ Flow, Tcp }
 import akka.util.ByteString
 
-/** Create an MQTT connection represented by a [[Graph]] of interconnected processing stages: [[io.wallee.codec.DecoderStage]],
+/** Create an MQTT connection represented by a [[akka.stream.Graph]] of interconnected processing stages: [[io.wallee.codec.DecoderStage]],
  *  [[io.wallee.codec.EncoderStage]], ...
  */
 trait MqttConnectionFactory extends (Tcp.IncomingConnection => Flow[ByteString, ByteString, NotUsed])

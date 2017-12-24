@@ -17,11 +17,11 @@
 package io.wallee.codec
 
 import akka.util.{ ByteString, CompactByteString }
-import io.wallee.protocol.{ Puback, Pubrel }
+import io.wallee.protocol.Pubrel
 
 import scala.util.{ Failure, Success, Try }
 
-/** Encode [[Puback]] packages.
+/** Encode [[io.wallee.protocol.Pubrel]] packages.
  */
 object PubrelEncoder extends MqttPacketEncoder[Pubrel] {
 

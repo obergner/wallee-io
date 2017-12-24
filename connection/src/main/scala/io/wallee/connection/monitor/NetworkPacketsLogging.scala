@@ -16,8 +16,6 @@
 
 package io.wallee.connection.monitor
 
-import java.nio.ByteOrder
-
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.event.Logging
@@ -30,8 +28,6 @@ object NetworkPacketsLogging {
 
   def apply(conn: Tcp.IncomingConnection, level: Logging.LogLevel)(implicit system: ActorSystem): BidiFlow[ByteString, ByteString, ByteString, ByteString, NotUsed] =
     BidiFlow.fromGraph(GraphDSL.create() { implicit builder: GraphDSL.Builder[NotUsed] =>
-      implicit val order: ByteOrder = ByteOrder.LITTLE_ENDIAN
-
       val outbound = builder.add(Flow[ByteString].via(new LogNetworkPackets(conn, "SEND", level)(system)))
       val inbound = builder.add(Flow[ByteString].via(new LogNetworkPackets(conn, "RCVD", level)(system)))
 

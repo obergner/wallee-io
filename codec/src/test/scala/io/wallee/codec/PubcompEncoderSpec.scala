@@ -17,7 +17,7 @@
 package io.wallee.codec
 
 import akka.util.CompactByteString
-import io.wallee.protocol.{ Pubcomp, PacketIdentifier, Puback }
+import io.wallee.protocol.{ PacketIdentifier, Pubcomp }
 import org.scalatest.{ FlatSpec, Matchers }
 
 import scala.util.{ Failure, Success }
