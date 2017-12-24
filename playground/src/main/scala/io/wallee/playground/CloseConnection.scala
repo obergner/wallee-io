@@ -18,7 +18,6 @@ package io.wallee.playground
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{Flow, Sink, Source, Tcp}
-import akka.stream.stage.{Context, PushStage, StatefulStage, SyncDirective}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.util.ByteString
 
@@ -61,7 +60,7 @@ object CloseConnection {
         println("Server started, listening on: " + b.localAddress)
       case Failure(e) =>
         println(s"Server could not bind to $address:$port: ${e.getMessage}")
-        system.shutdown()
+        system.terminate()
     }
 
   }
@@ -69,7 +68,7 @@ object CloseConnection {
   private def connectionHandler(conn: Tcp.IncomingConnection): Flow[ByteString, ByteString, _] = {
     Flow[ByteString]
       .log("ECHO-IN-1")
-      .transform[String](() => parseLines("\n", 4000))
+      .map[String](() => parseLines("\n", 4000))
       .log("ECHO-IN-2")
       .transform[String](() => new PushStage[String, String]() {
       override def onPush(elem: String, ctx: Context[String]): SyncDirective = {

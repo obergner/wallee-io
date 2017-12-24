@@ -28,9 +28,9 @@ import org.scalatest.{ FlatSpec, Matchers }
 
 class FrameDecoderStageSpec extends FlatSpec with Matchers {
 
-  final implicit val as = ActorSystem()
+  final implicit val as: ActorSystem = ActorSystem()
 
-  final implicit val fm = ActorMaterializer(ActorMaterializerSettings(as))
+  final implicit val fm: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(as))
 
   val connection = Tcp.IncomingConnection(new InetSocketAddress(111), new InetSocketAddress(222), Flow[ByteString])
 
@@ -96,7 +96,7 @@ class FrameDecoderStageSpec extends FlatSpec with Matchers {
     val fourthChunk = CompactByteString(0x2A, 0x01, 0x01)
 
     val builder = new ByteStringBuilder
-    for (_ <- 1 to (thirdRemainingLength - 1)) {
+    for (_ <- 1 until thirdRemainingLength) {
       builder.putByte(0x01)
     }
     val fifthChunk = builder.result().compact

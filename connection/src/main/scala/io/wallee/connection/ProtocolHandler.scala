@@ -60,9 +60,7 @@ final class ProtocolHandler(
 
       setHandler(out, new OutHandler {
         @throws[Exception](classOf[Exception])
-        override def onPull(): Unit = {
-          pull(in)
-        }
+        override def onPull(): Unit = pull(in)
       })
     }
 }
