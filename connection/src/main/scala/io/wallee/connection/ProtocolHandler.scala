@@ -48,7 +48,7 @@ final class ProtocolHandler(
         @throws[Exception](classOf[Exception])
         override def onPush(): Unit = {
           val elem = grab(in)
-          val optionalResponse = elem match {
+          val optionalResponse: Option[MqttPacket] = elem match {
             case p: Connect => connectProcessor.process(p)
             case p: PingReq => pingReqProcessor.process(p)
             case p: Publish => publishProcessor.process(p)

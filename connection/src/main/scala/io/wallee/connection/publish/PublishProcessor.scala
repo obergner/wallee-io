@@ -19,7 +19,7 @@ package io.wallee.connection.publish
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.Tcp
 import io.wallee.connection.MqttPacketProcessor
-import io.wallee.protocol.{ MqttPacket, Puback, Publish }
+import io.wallee.protocol.{ Puback, Publish }
 import io.wallee.shared.logging.TcpConnectionLogging
 
 /** Handle [[Publish]] messages.
@@ -27,9 +27,9 @@ import io.wallee.shared.logging.TcpConnectionLogging
  *  @todo Implementation needed
  */
 final class PublishProcessor(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
-  extends MqttPacketProcessor[Publish, MqttPacket] with TcpConnectionLogging {
+  extends MqttPacketProcessor[Publish, Puback] with TcpConnectionLogging {
 
-  override def process(publish: Publish): Option[MqttPacket] = {
+  override def process(publish: Publish): Option[Puback] = {
     log.debug(s"PUBLISH:   $publish ...")
     log.info(s"PUBLISHED: $publish - confirmation pending")
     Some(Puback(publish.packetId))

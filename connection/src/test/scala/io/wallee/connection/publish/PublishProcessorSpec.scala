@@ -14,18 +14,21 @@
  * limitations under the License.
  */
 
-package io.wallee.connection.ping
+package io.wallee.connection.publish
 
 import java.net.InetSocketAddress
+import java.nio.charset.Charset
 
 import akka.actor.ActorSystem
 import akka.stream.scaladsl.{ Flow, Tcp }
 import akka.stream.{ ActorMaterializer, ActorMaterializerSettings }
 import akka.util.ByteString
-import io.wallee.protocol.PingReq
+import io.wallee.protocol.{ PacketIdentifier, Publish, QoS, Topic }
 import org.scalatest.{ FlatSpec, Matchers }
 
-class PingReqProcessorSpec extends FlatSpec with Matchers {
+class PublishProcessorSpec extends FlatSpec with Matchers {
+
+  behavior of "PublishProcessor"
 
   final implicit val as: ActorSystem = ActorSystem()
 
@@ -33,14 +36,14 @@ class PingReqProcessorSpec extends FlatSpec with Matchers {
 
   val connection: Tcp.IncomingConnection = Tcp.IncomingConnection(new InetSocketAddress(111), new InetSocketAddress(222), Flow[ByteString])
 
-  "process when given a PingReq" should "respond with a PingResp" in {
-    val pingReq = PingReq()
+  "process" should "respond with proper Puback" in {
+    val publish = Publish(dup = false, QoS.AtLeastOnce, retain = false, Topic("/test"), PacketIdentifier(1), ByteString("test", Charset.forName("UTF-8")))
 
-    val objectUnderTest = new PingReqProcessor(connection)
+    val objectUnderTest = new PublishProcessor(connection)
 
-    objectUnderTest.process(pingReq) match {
-      case Some(pingResp) => succeed
-      case _              => fail("should have returned a PingResp")
+    objectUnderTest.process(publish) match {
+      case Some(puback) => assert(puback.packetId == publish.packetId)
+      case None         => fail("Should have responded with a Puback packet")
     }
   }
 }
