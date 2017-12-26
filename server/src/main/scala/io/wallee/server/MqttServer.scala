@@ -46,25 +46,21 @@ class MqttServer(bindAddress: String, bindPort: Int, bindTimeout: Duration, exec
     }
   }
 
-  private def newHandle(serverBinding: ServerBinding): MqttServer.Handle = {
-    () =>
-      {
-        try {
-          val unbound: Future[Unit] = serverBinding.unbind().andThen[Unit] {
-            case Success(_) =>
-              system.log.info(s"MQTT server successfully unbound from [$bindAddress:$bindPort]")
-              val _ = system.terminate()
-            case Failure(ex) =>
-              system.log.error(ex, s"Failed to unbind MQTT server from [$bindAddress:$bindPort]: ${ex.getMessage}")
-              val _ = system.terminate()
-          }
-          val _ = Await.result(unbound, bindTimeout)
-          Success(())
-        } catch {
-          case ex: Throwable => Failure(ex)
-        }
+  private def newHandle(serverBinding: ServerBinding): MqttServer.Handle = () =>
+    try {
+      val unbound: Future[Unit] = serverBinding.unbind().andThen[Unit] {
+        case Success(_) =>
+          system.log.info(s"MQTT server successfully unbound from [$bindAddress:$bindPort]")
+          val _ = system.terminate()
+        case Failure(ex) =>
+          system.log.error(ex, s"Failed to unbind MQTT server from [$bindAddress:$bindPort]: ${ex.getMessage}")
+          val _ = system.terminate()
       }
-  }
+      val _ = Await.result(unbound, bindTimeout)
+      Success(())
+    } catch {
+      case ex: Throwable => Failure(ex)
+    }
 
   private[this] def doStart(): ServerBinding = {
 

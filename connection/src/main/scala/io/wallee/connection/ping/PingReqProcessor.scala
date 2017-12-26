@@ -27,7 +27,5 @@ import io.wallee.shared.logging.TcpConnectionLogging
 final class PingReqProcessor(protected[this] val connection: Tcp.IncomingConnection)(protected[this] implicit val system: ActorSystem)
   extends MqttPacketProcessor[PingReq, PingResp] with TcpConnectionLogging {
 
-  override def process(pingReq: PingReq): Option[PingResp] = {
-    Some(PingResp())
-  }
+  override def process(pingReq: PingReq): Option[PingResp] = Some(PingResp())
 }

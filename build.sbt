@@ -5,9 +5,9 @@ import scalariform.formatter.preferences._
 name := "wallee-io"
 
 lazy val commonSettings = Seq(
-  organization := "io.wallee",
-  organizationName := "io.wallee",
-  startYear := Some(2017),
+  organization := "Olaf Bergner",
+  organizationName := "Olaf Bergner",
+  startYear := Some(2015),
   licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0")),
   scalaVersion := Version.scala,
   crossScalaVersions := List(scalaVersion.value),
@@ -36,8 +36,6 @@ lazy val commonSettings = Seq(
     "-Xmx1536m",
     "-Djava.awt.headless=true"
   ),
-  unmanagedSourceDirectories.in(Compile) := List(scalaSource.in(Compile).value, javaSource.in(Compile).value),
-  unmanagedSourceDirectories.in(Test) := List(scalaSource.in(Test).value),
   git.baseVersion := "0.1.0",
   scalariformPreferences := scalariformPreferences.value
     .setPreference(AlignSingleLineCaseStatements, true)
@@ -57,12 +55,14 @@ lazy val commonSettings = Seq(
   )
 )
 
+lazy val commonPlugins = Seq(AutomateHeaderPlugin, GitVersioning, GitBranchPrompt, ScalaUnidocPlugin)
+
 lazy val walleeIo = project
   .in(file("."))
   .settings(
     commonSettings
   )
-  .enablePlugins(AutomateHeaderPlugin, GitVersioning, GitBranchPrompt, ScalaUnidocPlugin)
+  .enablePlugins(commonPlugins: _*)
   .aggregate(spi, shared, protocol, codec, connection, server)
 
 lazy val spi = project
@@ -71,6 +71,7 @@ lazy val spi = project
     commonSettings,
     libraryDependencies ++= spiDeps
   )
+  .enablePlugins(commonPlugins: _*)
 
 lazy val shared = project
   .in(file("shared"))
@@ -78,6 +79,7 @@ lazy val shared = project
     commonSettings,
     libraryDependencies ++= sharedDeps
   )
+  .enablePlugins(commonPlugins: _*)
   .dependsOn(spi)
 
 lazy val protocol = project
@@ -86,6 +88,7 @@ lazy val protocol = project
     commonSettings,
     libraryDependencies ++= protocolDeps
   )
+  .enablePlugins(commonPlugins: _*)
 
 lazy val codec = project
   .in(file("codec"))
@@ -93,6 +96,7 @@ lazy val codec = project
     commonSettings,
     libraryDependencies ++= codecDeps
   )
+  .enablePlugins(commonPlugins: _*)
   .dependsOn(shared, protocol)
 
 lazy val connection = project
@@ -101,6 +105,7 @@ lazy val connection = project
     commonSettings,
     libraryDependencies ++= connectionDeps
   )
+  .enablePlugins(commonPlugins: _*)
   .dependsOn(spi, shared, protocol, codec)
 
 lazy val playground = project
@@ -109,6 +114,7 @@ lazy val playground = project
     commonSettings,
     libraryDependencies ++= playgroundDeps
   )
+  .enablePlugins(commonPlugins: _*)
   .dependsOn(spi, protocol, codec, connection)
 
 lazy val server = project
@@ -117,6 +123,7 @@ lazy val server = project
     commonSettings,
     libraryDependencies ++= serverDeps
   )
+  .enablePlugins(commonPlugins: _*)
   .dependsOn(spi, protocol, codec, connection)
 
 initialCommands := """|import io.wallee._""".stripMargin
