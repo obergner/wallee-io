@@ -19,3 +19,4 @@ This is pretty much pre-alpha software, i.e. it does not even fully implement MQ
 serious functionality built on top of that. It might be useful, however, as sample code demonstrating how to use *akka
 streams* for network IO.
 
+Resumed working on this.
