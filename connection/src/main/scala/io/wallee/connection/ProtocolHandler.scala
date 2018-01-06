@@ -26,7 +26,7 @@ import io.wallee.connection.publish.PublishProcessor
 import io.wallee.protocol.{ Connect, MqttPacket, PingReq, Publish }
 import io.wallee.shared.logging.TcpConnectionLogging
 
-/** [[GraphStage]] for logging incoming/outgoing [[MqttPacket]]s.
+/** [[GraphStage]] for handling [[MqttPacket]]s.
  */
 final class ProtocolHandler(
     connectProcessor:               ConnectProcessor,

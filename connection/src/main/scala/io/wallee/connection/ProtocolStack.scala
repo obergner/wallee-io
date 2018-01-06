@@ -28,5 +28,8 @@ import io.wallee.protocol.MqttPacket
 object ProtocolStack {
 
   def apply(conn: Tcp.IncomingConnection, level: Logging.LogLevel)(implicit system: ActorSystem): BidiFlow[MqttPacket, ByteString, ByteString, MqttPacket, NotUsed] =
-    MqttPacketsLogging(conn, level)(system).atop(MqttCodec(conn)(system).atop(MqttFraming(conn)(system).atop(NetworkPacketsLogging(conn, level)(system))))
+    MqttPacketsLogging(conn, level)(system)
+      .atop(MqttCodec(conn)(system)
+        .atop(MqttFraming(conn)(system)
+          .atop(NetworkPacketsLogging(conn, level)(system))))
 }
